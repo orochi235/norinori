@@ -19,7 +19,7 @@
   .lemma-text > :last-child { margin-bottom: 0; }
   .lemma-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
   .lemma-num { font-size: .75em; font-weight: 700; background: #1a1a6e; color: white; padding: 2px 9px; border-radius: 4px; letter-spacing: .5px; white-space: nowrap; }
-  .lemma h2 { margin: 0; font-size: 1.15em; color: #1a1a6e; }
+  .lemma h2 { margin: 0; font-size: 1.15em; color: #1a1a6e; position: relative; top: 2px; }
   .lemma p { margin: 0 0 14px; }
   .corollary { font-size: .9em; color: #444; background: #f0f4ff; border-left: 3px solid #7090cc; padding: 8px 12px; border-radius: 0 4px 4px 0; margin-bottom: 14px; }
 
@@ -47,6 +47,14 @@
 
   .diagrams figure { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 0; }
   .diagrams figcaption { font-size: .78em; color: #666; font-style: italic; text-align: center; max-width: 180px; }
+
+  @media (max-width: 700px) {
+    body { padding: 16px 12px; }
+    .lemma, .axiom { grid-template-columns: 1fr; }
+    .diagrams { margin-top: 14px; }
+    .summary-card table { font-size: .82em; }
+    .summary-card th, .summary-card td { padding: 5px 8px; }
+  }
 </style>
 </head>
 <body>
@@ -61,7 +69,6 @@
     <li>Shade exactly <strong>2 cells</strong> in every region.</li>
     <li>Every shaded cell must belong to a <strong>domino</strong> — a pair of orthogonally adjacent shaded cells.</li>
     <li>Dominoes <em>may</em> cross region boundaries.</li>
-    <li>It follows that each shaded cell has <strong>exactly one</strong> shaded orthogonal neighbor.</li>
   </ul>
   <p style="font-size:.9em;margin-top:8px;"><a href="#axiom-1">See axioms below</a> for basic operations.</p>
 </div>
@@ -231,8 +238,8 @@
   </div>
   <div class="diagrams">
     <nn-transition before-caption="N and E unshaded" after-caption="SW forced unshaded">
-      <nn-diagram slot="before" shaded="2,2" excluded="2,1 3,2" extents="1,1:3,3"></nn-diagram>
-      <nn-diagram slot="after" shaded="2,2" excluded="2,1 3,2 1,3" extents="1,1:3,3"></nn-diagram>
+      <nn-diagram slot="before" shaded="2,2" excluded="2,1 3,2" unknown="1,2 2,3" extents="1,1:3,3"></nn-diagram>
+      <nn-diagram slot="after" shaded="2,2" excluded="2,1 3,2 1,3" unknown="1,2 2,3" extents="1,1:3,3"></nn-diagram>
     </nn-transition>
   </div>
 </div>
@@ -261,7 +268,14 @@
 
   <div class="axiom" id="axiom-2">
   <div class="axiom-text">
-  <div class="axiom-header"><span class="axiom-num">AXIOM 2</span><h2>Region saturation</h2></div>
+  <div class="axiom-header"><span class="axiom-num">AXIOM 2</span><h2>Exactly one shaded neighbor</h2></div>
+    <p>Each shaded cell has <strong>exactly one</strong> shaded orthogonal neighbor. This follows directly from the domino rule — each shaded cell belongs to exactly one domino.</p>
+  </div>
+  </div>
+
+  <div class="axiom" id="axiom-3">
+  <div class="axiom-text">
+  <div class="axiom-header"><span class="axiom-num">AXIOM 3</span><h2>Region saturation</h2></div>
     <p>Each region must contain exactly 2 shaded cells.</p>
     <div class="corollary">
       ⟹ <strong>Upper bound:</strong> 2 cells already shaded → all remaining cells in the region are unshaded.<br>
@@ -280,9 +294,9 @@
     </div>
   </div>
 
-  <div class="axiom" id="axiom-3">
+  <div class="axiom" id="axiom-4">
   <div class="axiom-text">
-  <div class="axiom-header"><span class="axiom-num">AXIOM 3</span><h2>Isolated region → internal domino</h2></div>
+  <div class="axiom-header"><span class="axiom-num">AXIOM 4</span><h2>Isolated region → internal domino</h2></div>
     <p>If a region has no cells adjacent to any other region, its domino must be internal.</p>
   </div>
     <div class="diagrams">
@@ -293,9 +307,9 @@
     </div>
   </div>
 
-  <div class="axiom" id="axiom-4">
+  <div class="axiom" id="axiom-5">
   <div class="axiom-text">
-  <div class="axiom-header"><span class="axiom-num">AXIOM 4</span><h2>Domino closure — neighbors of a domino are unshaded</h2></div>
+  <div class="axiom-header"><span class="axiom-num">AXIOM 5</span><h2>Domino closure — neighbors of a domino are unshaded</h2></div>
     <p>Each shaded cell belongs to <em>exactly one</em> domino, meaning it has exactly one shaded neighbor.
        Once two adjacent shaded cells form a confirmed domino, <strong>every other orthogonal neighbor</strong>
        of either cell must be unshaded.</p>
@@ -305,9 +319,9 @@
     </div>
   </div>
 
-  <div class="axiom" id="axiom-5">
+  <div class="axiom" id="axiom-6">
   <div class="axiom-text">
-  <div class="axiom-header"><span class="axiom-num">AXIOM 5</span><h2>Smothered cell</h2></div>
+  <div class="axiom-header"><span class="axiom-num">AXIOM 6</span><h2>Smothered cell</h2></div>
     <p>If all four orthogonal neighbors of a cell are unshaded, the cell itself <strong>cannot be shaded</strong> — it has no domino partner.</p>
   </div>
     <div class="diagrams">
@@ -318,9 +332,9 @@
     </div>
   </div>
 
-  <div class="axiom" id="axiom-6">
+  <div class="axiom" id="axiom-7">
   <div class="axiom-text">
-  <div class="axiom-header"><span class="axiom-num">AXIOM 6</span><h2>Squeeze</h2></div>
+  <div class="axiom-header"><span class="axiom-num">AXIOM 7</span><h2>Squeeze</h2></div>
     <p>A shaded cell must have exactly one shaded neighbor. If all but one of a shaded cell's orthogonal
        neighbors are known to be unshaded (or out-of-bounds), the remaining neighbor <strong>must be shaded</strong>.</p>
     <div class="corollary">⟹ Especially powerful near grid corners and walls, or wherever other lemmas have eliminated neighbors.</div>
@@ -333,9 +347,9 @@
     </div>
   </div>
 
-  <div class="axiom" id="axiom-7">
+  <div class="axiom" id="axiom-8">
   <div class="axiom-text">
-  <div class="axiom-header"><span class="axiom-num">AXIOM 7</span><h2>Three's a crowd</h2></div>
+  <div class="axiom-header"><span class="axiom-num">AXIOM 8</span><h2>Three's a crowd</h2></div>
     <p>Three consecutive cells in a line cannot all be shaded — the middle cell would have two shaded
        neighbors. So if two non-adjacent cells in a line are both shaded, the cell between them is unshaded.</p>
   </div>
@@ -347,9 +361,9 @@
     </div>
   </div>
 
-  <div class="axiom" id="axiom-8">
+  <div class="axiom" id="axiom-9">
   <div class="axiom-text">
-  <div class="axiom-header"><span class="axiom-num">AXIOM 8</span><h2>Checkerboard parity</h2></div>
+  <div class="axiom-header"><span class="axiom-num">AXIOM 9</span><h2>Checkerboard parity</h2></div>
     <p>Color the grid in a checkerboard pattern (this is a virtual/conceptual overlay, not regions).
        Every domino — horizontal or vertical — covers exactly one dark and one light cell. Therefore
        across the whole puzzle: <strong>total shaded dark cells = total shaded light cells</strong>.</p>
@@ -375,13 +389,14 @@
     <tbody>
       <tr><td colspan="3" style="background:#eee;font-weight:700;font-size:.9em;padding:6px 12px;">Axioms</td></tr>
       <tr><td><b>A1</b></td><td>Two-cell region</td><td>Both cells shaded</td></tr>
-      <tr><td><b>A2</b></td><td>Region saturation</td><td>2 shaded → rest unshaded; 2 left → both shaded</td></tr>
-      <tr><td><b>A3</b></td><td>Isolated region</td><td>Domino must be internal</td></tr>
-      <tr><td><b>A4</b></td><td>Domino closure</td><td>All other neighbors unshaded</td></tr>
-      <tr><td><b>A5</b></td><td>Smothered cell</td><td>Cell itself must be unshaded</td></tr>
-      <tr><td><b>A6</b></td><td>Squeeze</td><td>That neighbor is shaded</td></tr>
-      <tr><td><b>A7</b></td><td>Three's a crowd</td><td>Middle cell is unshaded</td></tr>
-      <tr><td><b>A8</b></td><td>Checkerboard parity</td><td>#shaded dark = #shaded light; use to rule out impossible configurations</td></tr>
+      <tr><td><b>A2</b></td><td>Exactly one shaded neighbor</td><td>Each shaded cell has exactly one shaded orthogonal neighbor</td></tr>
+      <tr><td><b>A3</b></td><td>Region saturation</td><td>2 shaded → rest unshaded; 2 left → both shaded</td></tr>
+      <tr><td><b>A4</b></td><td>Isolated region</td><td>Domino must be internal</td></tr>
+      <tr><td><b>A5</b></td><td>Domino closure</td><td>All other neighbors unshaded</td></tr>
+      <tr><td><b>A6</b></td><td>Smothered cell</td><td>Cell itself must be unshaded</td></tr>
+      <tr><td><b>A7</b></td><td>Squeeze</td><td>That neighbor is shaded</td></tr>
+      <tr><td><b>A8</b></td><td>Three's a crowd</td><td>Middle cell is unshaded</td></tr>
+      <tr><td><b>A9</b></td><td>Checkerboard parity</td><td>#shaded dark = #shaded light; use to rule out impossible configurations</td></tr>
       <tr><td colspan="3" style="background:#eee;font-weight:700;font-size:.9em;padding:6px 12px;">Lemmas</td></tr>
       <tr><td><b>1</b></td><td>Forlorn quarter</td><td>Cell completing the 2×2 square around an L-tromino is unshaded</td></tr>
       <tr><td><b>2</b></td><td>Corner lock</td><td>L-tromino corner cell always pairs internally; cannot cross regions</td></tr>
