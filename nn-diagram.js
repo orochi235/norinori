@@ -1,6 +1,6 @@
 class NNDiagram extends HTMLElement {
   static get observedAttributes() {
-    return ['regions', 'shaded', 'excluded', 'unknown', 'ish', 'labels', 'baseline', 'checkerboard', 'extents'];
+    return ['regions', 'shaded', 'excluded', 'unknown', 'ish', 'labels', 'baseline', 'checkerboard', 'extents', 'stubs', 'show-errors'];
   }
 
   constructor() {
@@ -56,6 +56,12 @@ class NNDiagram extends HTMLElement {
     return map;
   }
 
+  static parseStubs(s) {
+    if (!s || s.trim() === '' || s.trim() === 'all') return new Set(['top', 'bottom', 'left', 'right']);
+    if (s.trim() === 'none') return new Set();
+    return new Set(s.trim().split(/[\s,]+/).map(v => v.toLowerCase()));
+  }
+
   static key(x, y) { return `${x},${y}`; }
 
   render() {
@@ -65,6 +71,7 @@ class NNDiagram extends HTMLElement {
     const unknownList = NNDiagram.parseCoordList(this.getAttribute('unknown'));
     const ishList = NNDiagram.parseCoordList(this.getAttribute('ish'));
     const labelMap = NNDiagram.parseLabelList(this.getAttribute('labels'));
+    const stubSides = NNDiagram.parseStubs(this.getAttribute('stubs'));
 
     // ── Read CSS custom properties ──
     const cs = getComputedStyle(this);
@@ -83,12 +90,14 @@ class NNDiagram extends HTMLElement {
       excluded: cssVar('--nn-excluded', '#c00'),
       unknown:  cssVar('--nn-unknown', '#bbb'),
       label:    cssVar('--nn-label', '#444'),
-      grid:     cssVar('--nn-grid', '#ccc'),
+      grid:     cssVar('--nn-grid', '#999'),
       region:   cssVar('--nn-region-border', '#000'),
       cell:     cssVar('--nn-cell-bg', '#fff'),
       caption:  cssVar('--nn-caption', '#666'),
-      checker:  cssVar('--nn-checker', '#e0e0e0'),
+      checker:  cssVar('--nn-checker', '#c0c0c0'),
+      error:    cssVar('--nn-error', '#e03030'),
     };
+    const showErrors = this.hasAttribute('show-errors');
     const C     = cssNum('--nn-cell-size', 36);
     const THIN  = cssNum('--nn-grid-width', 1);
     const THICK = cssNum('--nn-region-width', 3);
@@ -141,6 +150,15 @@ class NNDiagram extends HTMLElement {
     for (const c of unknownList) stateMap.set(NNDiagram.key(c.x, c.y), 'unknown');
     for (const c of ishList) stateMap.set(NNDiagram.key(c.x, c.y), 'ish');
 
+    // ── Count shaded cells per region for error highlighting ──
+    const shadedPerRegion = new Map();
+    if (showErrors) {
+      for (const c of shadedList) {
+        const ri = regionOf.get(NNDiagram.key(c.x, c.y));
+        if (ri !== undefined) shadedPerRegion.set(ri, (shadedPerRegion.get(ri) || 0) + 1);
+      }
+    }
+
     const HC = C / 2;
     // Total SVG size: half cell padding + content cells + half cell padding
     // Plus an extra half cell on each side for stubs to extend into
@@ -181,14 +199,19 @@ class NNDiagram extends HTMLElement {
         const isDark = (gx + gy) % 2 === 0;
         const cellBg = (checkerboard && inBBox) ? (isDark ? COL.checker : COL.cell) : (inBBox ? COL.cell : 'transparent');
 
+        // Check if this cell's region has an error (shaded count ≠ 2)
+        const ri = regionOf.get(k);
+        const regionError = showErrors && ri !== undefined && shadedPerRegion.get(ri) !== 2;
+
         // Skip shaded/ish cells — they'll be drawn later as merged shapes
         if (state === 'shaded' || state === 'ish') {
-          // Still draw base color underneath so gridlines have a clean base
           svg += `<rect x="${px}" y="${py}" width="${cw}" height="${ch}" fill="${cellBg}"/>`;
+          if (regionError) svg += `<rect x="${px}" y="${py}" width="${cw}" height="${ch}" fill="${COL.error}" opacity="0.25"/>`;
           continue;
         }
 
         svg += `<rect x="${px}" y="${py}" width="${cw}" height="${ch}" fill="${cellBg}"/>`;
+        if (regionError) svg += `<rect x="${px}" y="${py}" width="${cw}" height="${ch}" fill="${COL.error}" opacity="0.25"/>`;
       }
     }
 
@@ -272,9 +295,12 @@ class NNDiagram extends HTMLElement {
           const x2 = cellX(endGx) + cellW(endGx);
           const y = (gy <= maxY) ? cellY(gy) : cellY(maxY) + cellH(maxY);
 
-          svg += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${COL.grid}" stroke-width="${THIN}"/>`;
-          svg += drawStub(x1, y, -1, 0); // left stub
-          svg += drawStub(x2, y, 1, 0);  // right stub
+          const isTopEdge = (gy === minY);
+          const isBottomEdge = (gy === maxY + 1);
+          const hLineW = ((isTopEdge && !stubSides.has('top')) || (isBottomEdge && !stubSides.has('bottom'))) ? THIN * 2 : THIN;
+          svg += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${COL.grid}" stroke-width="${hLineW}"/>`;
+          if (stubSides.has('left'))  svg += drawStub(x1, y, -1, 0); // left stub
+          if (stubSides.has('right')) svg += drawStub(x2, y, 1, 0);  // right stub
 
           runStart = -1;
         }
@@ -296,9 +322,12 @@ class NNDiagram extends HTMLElement {
           const y2 = cellY(endGy) + cellH(endGy);
           const x = (gx <= maxX) ? cellX(gx) : cellX(maxX) + cellW(maxX);
 
-          svg += `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${COL.grid}" stroke-width="${THIN}"/>`;
-          svg += drawStub(x, y1, 0, -1); // top stub
-          svg += drawStub(x, y2, 0, 1);  // bottom stub
+          const isLeftEdge = (gx === minX);
+          const isRightEdge = (gx === maxX + 1);
+          const vLineW = ((isLeftEdge && !stubSides.has('left')) || (isRightEdge && !stubSides.has('right'))) ? THIN * 2 : THIN;
+          svg += `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${COL.grid}" stroke-width="${vLineW}"/>`;
+          if (stubSides.has('top'))    svg += drawStub(x, y1, 0, -1); // top stub
+          if (stubSides.has('bottom')) svg += drawStub(x, y2, 0, 1);  // bottom stub
 
           runStart = -1;
         }
@@ -307,10 +336,10 @@ class NNDiagram extends HTMLElement {
 
     // ── Shaded overlays (semi-transparent, drawn over gridlines) ──
     for (const comp of shadedShapes) {
-      svg += `<path d="${buildMergedPath(comp)}" fill="${COL.shaded}" opacity="0.55" fill-rule="nonzero"/>`;
+      svg += `<path d="${buildMergedPath(comp)}" fill="${COL.shaded}" style="mix-blend-mode:multiply" fill-rule="nonzero"/>`;
     }
     for (const comp of ishShapes) {
-      svg += `<path d="${buildMergedPath(comp)}" fill="${COL.ish}" opacity="0.55" fill-rule="nonzero"/>`;
+      svg += `<path d="${buildMergedPath(comp)}" fill="${COL.ish}" style="mix-blend-mode:multiply" fill-rule="nonzero"/>`;
     }
 
     // ── Cell content (text) — only for full-size content cells ──
@@ -463,7 +492,9 @@ class NNDiagram extends HTMLElement {
 
     for (const [ri, cells] of regionGroups) {
       const d = traceRegionContour(cells, ri);
-      svg += `<path d="${d}" fill="none" stroke="${COL.region}" stroke-width="${THICK}" stroke-linejoin="miter"/>`;
+      const regionErr = showErrors && shadedPerRegion.get(ri) !== 2;
+      const strokeCol = regionErr ? COL.error : COL.region;
+      svg += `<path d="${d}" fill="none" stroke="${strokeCol}" stroke-width="${THICK}" stroke-linejoin="round"/>`;
     }
 
     const fullSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">${svg}</svg>`;
@@ -498,3 +529,104 @@ class NNDiagram extends HTMLElement {
 }
 
 customElements.define('nn-diagram', NNDiagram);
+
+class NNSequence extends HTMLElement {
+  static get observedAttributes() {
+    return ['captions', 'before-caption', 'after-caption'];
+  }
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+  }
+
+  connectedCallback() { this.syncExtents(); this.render(); }
+  attributeChangedCallback() { this.render(); }
+
+  syncExtents() {
+    const diagrams = [...this.querySelectorAll('nn-diagram')];
+    if (diagrams.length < 2) return;
+
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+    for (const d of diagrams) {
+      const attrs = ['regions', 'shaded', 'excluded', 'unknown', 'ish', 'labels', 'extents'];
+      for (const attr of attrs) {
+        const val = d.getAttribute(attr);
+        if (!val) continue;
+        const coords = val.match(/\d+,\d+/g);
+        if (!coords) continue;
+        for (const c of coords) {
+          const [x, y] = c.split(',').map(Number);
+          minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+          minY = Math.min(minY, y); maxY = Math.max(maxY, y);
+        }
+      }
+    }
+
+    if (minX === Infinity) return;
+
+    const ext = `${minX},${minY}:${maxX},${maxY}`;
+    for (const d of diagrams) {
+      d.setAttribute('extents', ext);
+    }
+  }
+
+  render() {
+    const diagrams = [...this.querySelectorAll('nn-diagram')];
+    const n = diagrams.length;
+    if (n === 0) return;
+
+    // Parse captions: new pipe-delimited attribute, or legacy before-caption / after-caption
+    let captions;
+    const captionsAttr = this.getAttribute('captions');
+    if (captionsAttr) {
+      captions = captionsAttr.split('|').map(s => s.trim());
+    } else {
+      const bc = this.getAttribute('before-caption') || '';
+      const ac = this.getAttribute('after-caption') || '';
+      captions = [bc, ac];
+    }
+
+    // Assign slot names to each diagram
+    diagrams.forEach((d, i) => d.setAttribute('slot', `d${i}`));
+
+    // Build grid columns: diagram, arrow, diagram, arrow, ..., diagram
+    const colTemplate = Array.from({ length: n }, () => 'auto').join(' auto ');
+    // Total columns: n diagrams + (n-1) arrows = 2n - 1
+    const totalCols = 2 * n - 1;
+
+    let slotsHTML = '';
+    let captionsHTML = '';
+    let slotStyles = '';
+
+    for (let i = 0; i < n; i++) {
+      const col = i * 2 + 1; // 1-based CSS grid column
+      slotsHTML += `<slot name="d${i}"></slot>`;
+      slotStyles += `slot[name="d${i}"] { grid-row: 1; grid-column: ${col}; display: flex; justify-content: center; }\n`;
+
+      if (captions[i]) {
+        captionsHTML += `<div class="cap" style="grid-column: ${col};">${captions[i]}</div>`;
+      }
+
+      if (i < n - 1) {
+        slotsHTML += `<div class="arrow" style="grid-column: ${col + 1};">→</div>`;
+      }
+    }
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: inline-grid; grid-template-columns: ${colTemplate}; grid-template-rows: auto auto; gap: 0 12px; }
+        .arrow { font-size: 26px; color: #999; grid-row: 1; text-align: center; align-self: center; }
+        ${slotStyles}
+        .cap { grid-row: 2; font-family: 'Segoe UI', system-ui, sans-serif; font-size: .78em; color: #666; font-style: italic; text-align: center; max-width: 180px; justify-self: center; margin-top: 4px; }
+      </style>
+      ${slotsHTML}
+      ${captionsHTML}
+    `;
+  }
+}
+
+customElements.define('nn-sequence', NNSequence);
+// Backwards compatibility
+customElements.define('nn-transition', class extends NNSequence {});

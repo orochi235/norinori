@@ -10,6 +10,7 @@
   .subtitle { color: #555; font-size: .95em; margin-bottom: 32px; }
 
   .rules { background: #1a1a6e; color: white; border-radius: 10px; padding: 18px 22px; margin-bottom: 36px; font-size: .93em; }
+  .rules a { color: inherit; }
   .rules h2 { margin: 0 0 10px; font-size: 1.1em; }
   .rules li { margin: 4px 0; }
 
@@ -62,6 +63,178 @@
     <li>Dominoes <em>may</em> cross region boundaries.</li>
     <li>It follows that each shaded cell has <strong>exactly one</strong> shaded orthogonal neighbor.</li>
   </ul>
+  <p style="font-size:.9em;margin-top:8px;"><a href="#axiom-1">See axioms below</a> for basic operations.</p>
+</div>
+
+<!-- ═══ LEMMA 1 ═══ -->
+<div class="lemma" id="lemma-1">
+  <div class="lemma-text">
+  <div class="lemma-header"><span class="lemma-num">LEMMA 1</span><h2>Forlorn quarter</h2></div>
+  <p>In an L-shaped 3-cell region, the cell that would complete the 2×2 square
+     <strong>cannot be shaded</strong>. The region's domino must pass through the corner cell
+     (since the two ends aren't adjacent), and in either orientation, that diagonal cell
+     is a neighbor of the domino — forced unshaded by Lemma 2.</p>
+  </div>
+  <div class="diagrams">
+    <figure><nn-diagram regions="1,1 1,2 2,2" excluded="2,1"></nn-diagram><figcaption>Diagonal cell forced unshaded</figcaption></figure>
+  </div>
+</div>
+
+<!-- ═══ LEMMA 2 ═══ -->
+<div class="lemma" id="lemma-2">
+  <div class="lemma-text">
+  <div class="lemma-header"><span class="lemma-num">LEMMA 2</span><h2>Corner lock</h2></div>
+  <p>In an L-tromino, if the corner cell is shaded, it <strong>must pair with one of the two end cells</strong> —
+     it cannot form a cross-region domino.</p>
+  <div class="corollary">
+    ⟹ Any external neighbor of the corner that is shaded must get its domino from elsewhere.
+  </div>
+  </div>
+  <div class="diagrams">
+    <figure><nn-diagram show-errors regions="2,1 2,2 3,2" shaded="1,2 2,2" excluded="2,1 3,2" ></nn-diagram><figcaption><span style="color:#c00">✗ Invalid</span> — corner pairs externally, ends stranded</figcaption></figure>
+    <figure><nn-diagram regions="2,1 2,2 3,2" shaded="2,2 3,2" ></nn-diagram><figcaption>Corner can only pair internally</figcaption></figure>
+  </div>
+</div>
+
+<!-- ═══ LEMMA 3 ═══ -->
+<div class="lemma" id="lemma-3">
+  <div class="lemma-text">
+  <div class="lemma-header"><span class="lemma-num">LEMMA 3</span><h2>Elbow</h2></div>
+  <p>In an L-tromino, if the cell past one end is unshaded or out of bounds,
+     then the cell past the corner on the same axis is also <strong>unshaded</strong>.
+     Both valid domino placements force it unshaded via domino closure.</p>
+  </div>
+  <div class="diagrams">
+    <nn-transition before-caption="Cell above end is unshaded" after-caption="Cell below corner also forced unshaded">
+      <nn-diagram slot="before" regions="2,2 2,3 3,3" excluded="2,1" unknown="2,4"></nn-diagram>
+      <nn-diagram slot="after" regions="2,2 2,3 3,3" excluded="2,1 2,4"></nn-diagram>
+    </nn-transition>
+  </div>
+</div>
+
+<!-- ═══ LEMMA 4 ═══ -->
+<div class="lemma" id="lemma-4">
+  <div class="lemma-text">
+  <div class="lemma-header"><span class="lemma-num">LEMMA 4</span><h2>Stash</h2></div>
+  <p>In an L-tromino, if one end has all its external neighbors unshaded, it can only pair with the corner.
+     If the corner–other end domino is also ruled out, then <strong>the surrounded end and the corner
+     are shaded</strong>, and the other end is unshaded.</p>
+  <div class="corollary">
+    ⟹ Tip: this may not be the only valid solution, but it is guaranteed to be the lowest-impact
+    way to satisfy the cell's requirements.
+  </div>
+  </div>
+  <div class="diagrams">
+    <nn-transition before-caption="One end's 3 external neighbors all unshaded" after-caption="Corner–other end ruled out: surrounded end + corner shaded">
+      <nn-diagram slot="before" regions="2,2 3,2 3,1" excluded="2,1 1,2 2,3"></nn-diagram>
+      <nn-diagram slot="after" regions="2,2 3,2 3,1" excluded="2,1 1,2 2,3 3,1" shaded="2,2 3,2"></nn-diagram>
+    </nn-transition>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+<!-- ═══ LEMMA 5 ═══ -->
+<div class="lemma" id="lemma-5">
+  <div class="lemma-text">
+  <div class="lemma-header"><span class="lemma-num">LEMMA 5</span><h2>Brainstem</h2></div>
+  <p>When an L-shaped 4-cell region and a straight 3-cell region together fill a 2×3 rectangle
+     (with one extra cell sticking out), the extra cell — the "brainstem" — <strong>must be shaded</strong>.</p>
+  <div class="corollary">
+    ⟹ If it weren't, the straight region's domino would sit inside the rectangle, blocking the
+     L-region from forming a valid domino. Contradiction.
+  </div>
+  </div>
+  <div class="diagrams">
+    <nn-transition before-caption="L-region and straight region + brainstem" after-caption="Brainstem must be shaded">
+      <nn-diagram slot="before" regions="1,1 2,1 3,1 1,2 | 2,2 3,2 4,2"></nn-diagram>
+      <nn-diagram slot="after" regions="1,1 2,1 3,1 1,2 | 2,2 3,2 4,2" shaded="4,2"></nn-diagram>
+    </nn-transition>
+  </div>
+</div>
+
+<!-- ═══ LEMMA 6 ═══ -->
+<div class="lemma" id="lemma-6">
+  <div class="lemma-text">
+  <div class="lemma-header"><span class="lemma-num">LEMMA 6</span><h2>Clasp</h2></div>
+  <p>Two parallel, fully adjacent 1×3 regions: the <strong>center of each is unshaded</strong>,
+     and the outer cells form cross-region dominoes.</p>
+  <div class="corollary">
+    ⟹ A shaded center would force a neighbor with two shaded neighbors. Contradiction.
+  </div>
+  </div>
+  <div class="diagrams">
+    <nn-transition before-caption="Two adjacent 1×3 regions" after-caption="Centers unshaded; outer columns are cross-region dominoes">
+      <nn-diagram slot="before" regions="1,1 2,1 3,1 | 1,2 2,2 3,2"></nn-diagram>
+      <nn-diagram slot="after" regions="1,1 2,1 3,1 | 1,2 2,2 3,2" shaded="1,1 1,2 3,1 3,2" excluded="2,1 2,2"></nn-diagram>
+    </nn-transition>
+  </div>
+</div>
+
+<!-- ═══ LEMMA 7 ═══ -->
+<div class="lemma" id="lemma-7">
+  <div class="lemma-text">
+  <div class="lemma-header"><span class="lemma-num">LEMMA 7</span><h2>Friction</h2></div>
+  <p>If two 3-cell regions share <strong>exactly 2 border edges</strong>, the one cell in each region
+     that is <em>not adjacent to the other region</em> must be shaded.</p>
+  <div class="corollary">
+    ⟹ If that non-adjacent cell were unshaded, the other two cells of its region would both need to
+     pair cross-region — but both share adjacency with the same single cell in the opposing region,
+     which can only serve one domino. Contradiction.
+  </div>
+  </div>
+  <div class="diagrams">
+    <nn-transition before-caption="Two 3-cell regions sharing 2 edges" after-caption="Non-adjacent cells must be shaded">
+      <nn-diagram slot="before" regions="1,1 2,1 3,1 | 2,2 3,2 4,2"></nn-diagram>
+      <nn-diagram slot="after" regions="1,1 2,1 3,1 | 2,2 3,2 4,2" shaded="1,1 4,2"></nn-diagram>
+    </nn-transition>
+  </div>
+</div>
+
+
+<!-- ═══ LEMMA 7b ═══ -->
+<div class="lemma" id="lemma-7b">
+  <div class="lemma-text">
+  <div class="lemma-header"><span class="lemma-num">LEMMA 7b</span><h2>Staircase</h2></div>
+  <p>When an L-tromino sits on top of a straight 3-cell region, the solution is fully determined.
+     The L-tromino's corner excludes the cell below it (Lemma 16), which forces the straight region's
+     domino to the far end. That in turn excludes the L-tromino's inner end, locking in its domino.</p>
+  <div class="corollary">
+    ⟹ Corollary of Lemma 16 + Axiom 2.
+  </div>
+  </div>
+  <div class="diagrams">
+    <nn-transition before-caption="L-tromino above a straight region" after-caption="Both regions fully determined">
+      <nn-diagram slot="before" regions="1,1 1,2 2,2 | 1,3 2,3 3,3"></nn-diagram>
+      <nn-diagram slot="after" regions="1,1 1,2 2,2 | 1,3 2,3 3,3" shaded="1,1 1,2 2,3 3,3" excluded="2,2 1,3"></nn-diagram>
+    </nn-transition>
+  </div>
+</div>
+
+<!-- ═══ LEMMA 8 ═══ -->
+<div class="lemma" id="lemma-8">
+  <div class="lemma-text">
+  <div class="lemma-header"><span class="lemma-num">LEMMA 8</span><h2>Compass</h2></div>
+  <p>If a shaded cell has two <strong>consecutive</strong> cardinal neighbors unshaded (e.g. north and east),
+     it must pair with one of the other two. In both cases, the diagonal cell opposite the unshaded pair
+     is <strong>forced unshaded</strong> by Lemma 2.</p>
+  <div class="corollary">
+    ⟹ (N,E) unshaded → SW unshaded. Same for the other three rotations.
+  </div>
+  </div>
+  <div class="diagrams">
+    <nn-transition before-caption="N and E unshaded" after-caption="SW forced unshaded">
+      <nn-diagram slot="before" shaded="2,2" excluded="2,1 3,2" extents="1,1:3,3"></nn-diagram>
+      <nn-diagram slot="after" shaded="2,2" excluded="2,1 3,2 1,3" extents="1,1:3,3"></nn-diagram>
+    </nn-transition>
+  </div>
 </div>
 
 <!-- ═══ AXIOMS ═══ -->
@@ -70,7 +243,7 @@
 
   <div class="axiom" id="axiom-1">
   <div class="axiom-text">
-  <div class="axiom-header"><span class="axiom-num">AXIOM 1</span><h2>Two-Cell Region → Both Shaded</h2></div>
+  <div class="axiom-header"><span class="axiom-num">AXIOM 1</span><h2>Two-cell region → both shaded</h2></div>
     <p>If a region contains exactly <strong>2 cells</strong>, both must be shaded. Since they need to form
        a domino, the cells must also be orthogonally adjacent — which well-formed puzzles guarantee.</p>
   </div>
@@ -88,7 +261,7 @@
 
   <div class="axiom" id="axiom-2">
   <div class="axiom-text">
-  <div class="axiom-header"><span class="axiom-num">AXIOM 2</span><h2>Region Saturation</h2></div>
+  <div class="axiom-header"><span class="axiom-num">AXIOM 2</span><h2>Region saturation</h2></div>
     <p>Each region must contain exactly 2 shaded cells.</p>
     <div class="corollary">
       ⟹ <strong>Upper bound:</strong> 2 cells already shaded → all remaining cells in the region are unshaded.<br>
@@ -109,7 +282,7 @@
 
   <div class="axiom" id="axiom-3">
   <div class="axiom-text">
-  <div class="axiom-header"><span class="axiom-num">AXIOM 3</span><h2>Isolated Region → Internal Domino</h2></div>
+  <div class="axiom-header"><span class="axiom-num">AXIOM 3</span><h2>Isolated region → internal domino</h2></div>
     <p>If a region has no cells adjacent to any other region, its domino must be internal.</p>
   </div>
     <div class="diagrams">
@@ -120,317 +293,79 @@
     </div>
   </div>
 
-</details>
-
-<!-- ═══ LEMMA 1 ═══ -->
-<div class="lemma" id="lemma-1">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 1</span><h2>Elbow</h2></div>
-  <p>In an L-shaped 3-cell region, the cell that would complete the 2×2 square
-     <strong>cannot be shaded</strong>. The region's domino must pass through the corner cell
-     (since the two ends aren't adjacent), and in either orientation, that diagonal cell
-     is a neighbor of the domino — forced unshaded by Lemma 2.</p>
+  <div class="axiom" id="axiom-4">
+  <div class="axiom-text">
+  <div class="axiom-header"><span class="axiom-num">AXIOM 4</span><h2>Domino closure — neighbors of a domino are unshaded</h2></div>
+    <p>Each shaded cell belongs to <em>exactly one</em> domino, meaning it has exactly one shaded neighbor.
+       Once two adjacent shaded cells form a confirmed domino, <strong>every other orthogonal neighbor</strong>
+       of either cell must be unshaded.</p>
   </div>
-  <div class="diagrams">
-    <figure><nn-diagram regions="1,1 1,2 2,2" excluded="2,1"></nn-diagram><figcaption>Diagonal cell forced unshaded</figcaption></figure>
-  </div>
-</div>
-
-<!-- ═══ LEMMA 2 ═══ -->
-<div class="lemma" id="lemma-2">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 2</span><h2>Domino Closure — Neighbors of a Domino are Unshaded</h2></div>
-  <p>Each shaded cell belongs to <em>exactly one</em> domino, meaning it has exactly one shaded neighbor.
-     Once two adjacent shaded cells form a confirmed domino, <strong>every other orthogonal neighbor</strong>
-     of either cell must be unshaded.</p>
-  </div>
-  <div class="diagrams">
-    <figure><nn-diagram regions="2,2 3,2" shaded="2,2 3,2" excluded="2,1 3,1 1,2 4,2 2,3 3,3" ></nn-diagram><figcaption>Confirmed domino: 6 neighbors forced unshaded</figcaption></figure>
-  </div>
-</div>
-
-<!-- ═══ LEMMA 3 ═══ -->
-<div class="lemma" id="lemma-3">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 3</span><h2>Squeeze</h2></div>
-  <p>A shaded cell must have exactly one shaded neighbor. If all but one of a shaded cell's orthogonal
-     neighbors are known to be unshaded (or out-of-bounds), the remaining neighbor <strong>must be shaded</strong>.</p>
-  <div class="corollary">⟹ Especially powerful near grid corners and walls, or wherever other lemmas have eliminated neighbors.</div>
-  </div>
-  <div class="diagrams">
-    <nn-transition before-caption="3 neighbors excluded; only right is free" after-caption="Right neighbor forced shaded">
-      <nn-diagram slot="before" shaded="2,2" excluded="2,1 1,2 2,3" unknown="3,2" ></nn-diagram>
-      <nn-diagram slot="after" shaded="2,2 3,2" excluded="2,1 1,2 2,3" ></nn-diagram>
-    </nn-transition>
-  </div>
-</div>
-
-<!-- ═══ LEMMA 4 ═══ -->
-<div class="lemma" id="lemma-4">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 4</span><h2>No Three Collinear Shaded Cells</h2></div>
-  <p>Three consecutive cells in a line cannot all be shaded — the middle cell would have two shaded
-     neighbors. So if two non-adjacent cells in a line are both shaded, the cell between them is unshaded.</p>
-  </div>
-  <div class="diagrams">
-    <nn-transition before-caption="Ends shaded" after-caption="Middle forced unshaded">
-      <nn-diagram slot="before" shaded="1,1 3,1" unknown="2,1"></nn-diagram>
-      <nn-diagram slot="after" shaded="1,1 3,1" excluded="2,1"></nn-diagram>
-    </nn-transition>
-  </div>
-</div>
-
-<!-- ═══ LEMMA 6 ═══ -->
-<div class="lemma" id="lemma-6">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 6</span><h2>Unique Domino Position in a Region</h2></div>
-  <p>If analysis reduces a region to having <strong>only one valid adjacent pair</strong> among its
-     remaining unshaded cells, that pair must be shaded.</p>
-  <div class="corollary">⟹ Useful for L-, T-, or irregularly shaped regions where adjacency is limited.</div>
-  </div>
-  <div class="diagrams">
-    <nn-transition before-caption="L-shaped region (4 cells)" after-caption="Only one valid adjacent pair → both shaded">
-      <nn-diagram slot="before" regions="1,1 1,2 2,2 3,2"></nn-diagram>
-      <nn-diagram slot="after" regions="1,1 1,2 2,2 3,2" excluded="1,1 3,2" shaded="1,2 2,2"></nn-diagram>
-    </nn-transition>
-  </div>
-</div>
-
-<!-- ═══ LEMMA 8 ═══ -->
-<div class="lemma" id="lemma-8">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 8</span><h2>Single External Bridge</h2></div>
-  <p>If a region has no valid internal domino and only <strong>one cell adjacent to another region</strong>,
-     that cell must be shaded, forming a cross-region domino with its external neighbor.</p>
-  </div>
-  <div class="diagrams">
-    <nn-transition before-caption="1×3 region; only top cell touches another region" after-caption="Bridge cell shaded; cross-region domino forced">
-      <nn-diagram slot="before" regions="2,1 2,2 2,3" unknown="2,1 2,2 2,3 3,3"></nn-diagram>
-      <nn-diagram slot="after" regions="2,1 2,2 2,3" shaded="2,1" excluded="2,2" ish="2,3 3,3"></nn-diagram>
-    </nn-transition>
-  </div>
-</div>
-
-<!-- ═══ LEMMA 9 ═══ -->
-<div class="lemma" id="lemma-9">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 9</span><h2>Checkerboard Parity</h2></div>
-  <p>Color the grid in a checkerboard pattern (this is a virtual/conceptual overlay, not regions).
-     Every domino — horizontal or vertical — covers exactly one dark and one light cell. Therefore
-     across the whole puzzle: <strong>total shaded dark cells = total shaded light cells</strong>.</p>
-  <div class="corollary">
-    ⟹ A region whose cells all fall on the same checkerboard color must cross a region boundary (its
-     domino partner must be in a different region, on the opposite color).<br>
-    ⟹ Use this to rule out impossible configurations when counting shaded cells per color.
-  </div>
-  </div>
-  <div class="diagrams">
-    <figure><nn-diagram checkerboard
-      regions="1,1 1,2 1,3:3,2 | 4,1 4,2 3,3:4,3 | 2,1 3,1 | 1,4:4,4"
-      shaded="2,1 3,1 1,2 4,2 1,3 4,3 2,4 3,4"
-      ></nn-diagram><figcaption>Every domino covers one dark + one light cell</figcaption></figure>
-  </div>
-</div>
-
-<!-- ═══ LEMMA 10 ═══ -->
-<div class="lemma" id="lemma-10">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 10</span><h2>Mutual Exclusion Between Adjacent Regions</h2></div>
-  <p>A shared border between two regions can be part of <strong>at most one domino</strong>. If region A
-     must form a cross-region domino at a specific edge, region B cannot use that same edge for its own
-     cross-region domino.</p>
-  </div>
-  <div class="diagrams">
-    <figure><nn-diagram
-      regions="1,1 1,2 | 1,3 1,4"
-      shaded="1,1 1,2 1,3 1,4"
-      ></nn-diagram><figcaption>Two 2-cell regions share an edge — each forms its own domino</figcaption></figure>
-    <figure><nn-diagram
-      regions="1,1 2,1 1,2 | 2,2 1,3 2,3"
-      shaded="1,1 2,1 1,3 2,3"
-      excluded="1,2 2,2"
-      ></nn-diagram><figcaption>Each region needs to cross, but they can't share the same edge</figcaption></figure>
-  </div>
-</div>
-
-<!-- ═══ LEMMA 11 ═══ -->
-<div class="lemma" id="lemma-11">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 11</span><h2>Snake / Linear Region — Only Consecutive Pairs Valid</h2></div>
-  <p>In a region whose cells form a straight line, the two shaded cells must be adjacent (form a domino).
-     Only <em>consecutive pairs</em> within the line are valid candidate dominoes.</p>
-  <div class="corollary">
-    ⟹ Excluding one end cell can force a specific consecutive pair elsewhere.<br>
-    ⟹ Cells at positions 1 and 3 (for example) are never both shaded — they are not adjacent.
-  </div>
-  </div>
-  <div class="diagrams">
-    <figure><nn-diagram regions="1,1 2,1 3,1 4,1" labels="1,1:1 2,1:2 3,1:3 4,1:4" ></nn-diagram><figcaption>1×4 region (labeled for reference)</figcaption></figure>
-    <div class="stacked">
-      <figure><nn-diagram regions="1,1 2,1 3,1 4,1" shaded="1,1 2,1" excluded="3,1 4,1" ></nn-diagram></figure>
-      <figure><nn-diagram regions="1,1 2,1 3,1 4,1" shaded="2,1 3,1" excluded="1,1 4,1" ></nn-diagram></figure>
-      <figure><nn-diagram regions="1,1 2,1 3,1 4,1" shaded="3,1 4,1" excluded="1,1 2,1" ></nn-diagram><figcaption>3 valid placements</figcaption></figure>
+    <div class="diagrams">
+      <figure><nn-diagram regions="2,2 3,2" shaded="2,2 3,2" excluded="2,1 3,1 1,2 4,2 2,3 3,3" ></nn-diagram><figcaption>Confirmed domino: 6 neighbors forced unshaded</figcaption></figure>
     </div>
-    <figure><nn-diagram regions="1,1 2,1 3,1 4,1" excluded="1,1" shaded="3,1" unknown="2,1 4,1" ></nn-diagram><figcaption>Cell 1 excluded → cell 3 always shaded!</figcaption></figure>
   </div>
-</div>
 
-<!-- ═══ LEMMA 12 ═══ -->
-<div class="lemma" id="lemma-12">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 12</span><h2>Smothered Cell</h2></div>
-  <p>If all four orthogonal neighbors of a cell are unshaded, the cell itself <strong>cannot be shaded</strong> — it has no domino partner.</p>
+  <div class="axiom" id="axiom-5">
+  <div class="axiom-text">
+  <div class="axiom-header"><span class="axiom-num">AXIOM 5</span><h2>Smothered cell</h2></div>
+    <p>If all four orthogonal neighbors of a cell are unshaded, the cell itself <strong>cannot be shaded</strong> — it has no domino partner.</p>
   </div>
-  <div class="diagrams">
-    <nn-transition before-caption="All 4 neighbors known unshaded" after-caption="Center forced unshaded — no domino partner possible">
+    <div class="diagrams">
+      <nn-transition before-caption="All 4 neighbors known unshaded" after-caption="Center forced unshaded — no domino partner possible">
       <nn-diagram slot="before" excluded="2,1 1,2 3,2 2,3" unknown="2,2"></nn-diagram>
       <nn-diagram slot="after" excluded="2,1 1,2 3,2 2,3 2,2"></nn-diagram>
     </nn-transition>
+    </div>
   </div>
-</div>
 
-<!-- ═══ LEMMA 13 ═══ -->
-<div class="lemma" id="lemma-13">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 13</span><h2>Brainstem</h2></div>
-  <p>When an L-shaped 4-cell region and a straight 3-cell region together fill a 2×3 rectangle
-     (with one extra cell sticking out), the extra cell — the "brainstem" — <strong>must be shaded</strong>.</p>
-  <div class="corollary">
-    ⟹ If it weren't, the straight region's domino would sit inside the rectangle, blocking the
-     L-region from forming a valid domino. Contradiction.
+  <div class="axiom" id="axiom-6">
+  <div class="axiom-text">
+  <div class="axiom-header"><span class="axiom-num">AXIOM 6</span><h2>Squeeze</h2></div>
+    <p>A shaded cell must have exactly one shaded neighbor. If all but one of a shaded cell's orthogonal
+       neighbors are known to be unshaded (or out-of-bounds), the remaining neighbor <strong>must be shaded</strong>.</p>
+    <div class="corollary">⟹ Especially powerful near grid corners and walls, or wherever other lemmas have eliminated neighbors.</div>
   </div>
-  </div>
-  <div class="diagrams">
-    <nn-transition before-caption="L-region and straight region + brainstem" after-caption="Brainstem must be shaded">
-      <nn-diagram slot="before" regions="1,1 2,1 3,1 1,2 | 2,2 3,2 4,2"></nn-diagram>
-      <nn-diagram slot="after" regions="1,1 2,1 3,1 1,2 | 2,2 3,2 4,2" shaded="4,2"></nn-diagram>
+    <div class="diagrams">
+      <nn-transition before-caption="3 neighbors excluded; only right is free" after-caption="Right neighbor forced shaded">
+      <nn-diagram slot="before" shaded="2,2" excluded="2,1 1,2 2,3" unknown="3,2" ></nn-diagram>
+      <nn-diagram slot="after" shaded="2,2 3,2" excluded="2,1 1,2 2,3" ></nn-diagram>
     </nn-transition>
+    </div>
   </div>
-</div>
 
-<!-- ═══ LEMMA 14 ═══ -->
-<div class="lemma" id="lemma-14">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 14</span><h2>Peru 🇵🇪</h2></div>
-  <p>Two parallel, fully adjacent 1×3 regions: the <strong>center of each is unshaded</strong>,
-     and the outer cells form cross-region dominoes.</p>
-  <div class="corollary">
-    ⟹ A shaded center would force a neighbor with two shaded neighbors. Contradiction.
+  <div class="axiom" id="axiom-7">
+  <div class="axiom-text">
+  <div class="axiom-header"><span class="axiom-num">AXIOM 7</span><h2>Three's a crowd</h2></div>
+    <p>Three consecutive cells in a line cannot all be shaded — the middle cell would have two shaded
+       neighbors. So if two non-adjacent cells in a line are both shaded, the cell between them is unshaded.</p>
   </div>
-  </div>
-  <div class="diagrams">
-    <nn-transition before-caption="Two adjacent 1×3 regions" after-caption="Centers unshaded; outer columns are cross-region dominoes">
-      <nn-diagram slot="before" regions="1,1 2,1 3,1 | 1,2 2,2 3,2"></nn-diagram>
-      <nn-diagram slot="after" regions="1,1 2,1 3,1 | 1,2 2,2 3,2" shaded="1,1 1,2 3,1 3,2" excluded="2,1 2,2"></nn-diagram>
+    <div class="diagrams">
+      <nn-transition before-caption="Ends shaded" after-caption="Middle forced unshaded">
+      <nn-diagram slot="before" shaded="1,1 3,1" unknown="2,1"></nn-diagram>
+      <nn-diagram slot="after" shaded="1,1 3,1" excluded="2,1"></nn-diagram>
     </nn-transition>
+    </div>
   </div>
-</div>
 
-<!-- ═══ LEMMA 15 ═══ -->
-<div class="lemma" id="lemma-15">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 15</span><h2>Two 3-cell Regions with Exactly 2 Shared Edges</h2></div>
-  <p>If two 3-cell regions share <strong>exactly 2 border edges</strong>, the one cell in each region
-     that is <em>not adjacent to the other region</em> must be shaded.</p>
-  <div class="corollary">
-    ⟹ If that non-adjacent cell were unshaded, the other two cells of its region would both need to
-     pair cross-region — but both share adjacency with the same single cell in the opposing region,
-     which can only serve one domino. Contradiction.
+  <div class="axiom" id="axiom-8">
+  <div class="axiom-text">
+  <div class="axiom-header"><span class="axiom-num">AXIOM 8</span><h2>Checkerboard parity</h2></div>
+    <p>Color the grid in a checkerboard pattern (this is a virtual/conceptual overlay, not regions).
+       Every domino — horizontal or vertical — covers exactly one dark and one light cell. Therefore
+       across the whole puzzle: <strong>total shaded dark cells = total shaded light cells</strong>.</p>
+    <div class="corollary">
+      ⟹ Use this to rule out impossible configurations when counting shaded cells per color.
+    </div>
   </div>
+    <div class="diagrams">
+      <figure><nn-diagram checkerboard stubs="none"
+        regions="1,1 1,2 1,3:3,2 | 4,1 4,2 3,3:4,3 | 2,1 3,1 | 1,4:4,4"
+        shaded="2,1 3,1 1,2 4,2 1,3 4,3 2,4 3,4"
+        ></nn-diagram><figcaption>Every domino covers one dark + one light cell</figcaption></figure>
+    </div>
   </div>
-  <div class="diagrams">
-    <nn-transition before-caption="Two 3-cell regions sharing 2 edges" after-caption="Non-adjacent cells must be shaded">
-      <nn-diagram slot="before" regions="1,1 2,1 3,1 | 2,2 3,2 4,2"></nn-diagram>
-      <nn-diagram slot="after" regions="1,1 2,1 3,1 | 2,2 3,2 4,2" shaded="1,1 4,2"></nn-diagram>
-    </nn-transition>
-  </div>
-</div>
 
-<!-- ═══ LEMMA 16 ═══ -->
-<div class="lemma" id="lemma-16">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 16</span><h2>L-Tromino — Corner Cell's External Neighbors are Unshaded</h2></div>
-  <p>In an L-tromino, the two end cells aren't adjacent, so the domino must pass through the corner cell.
-     By Lemma 2, the corner's external neighbors are forced unshaded regardless of which end it pairs with.</p>
-  <div class="corollary">
-    ⟹ Exception: if both ends pair cross-region independently (corner unshaded), this does not apply.
-  </div>
-  </div>
-  <div class="diagrams">
-    <figure><nn-diagram regions="2,1 2,2 3,2" shaded="2,1 2,2" excluded="1,2 2,3" ></nn-diagram><figcaption>Either domino orientation...</figcaption></figure>
-    <figure><nn-diagram regions="2,1 2,2 3,2" shaded="2,2 3,2" excluded="1,2 2,3" ></nn-diagram><figcaption>...forces the same external neighbors unshaded</figcaption></figure>
-  </div>
-</div>
-
-<!-- ═══ LEMMA 16b ═══ -->
-<div class="lemma" id="lemma-16b">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 16b</span><h2>Staircase</h2></div>
-  <p>When an L-tromino sits on top of a straight 3-cell region, the solution is fully determined.
-     The L-tromino's corner excludes the cell below it (Lemma 16), which forces the straight region's
-     domino to the far end. That in turn excludes the L-tromino's inner end, locking in its domino.</p>
-  <div class="corollary">
-    ⟹ Corollary of Lemma 16 + Axiom 2.
-  </div>
-  </div>
-  <div class="diagrams">
-    <nn-transition before-caption="L-tromino above a straight region" after-caption="Both regions fully determined">
-      <nn-diagram slot="before" regions="1,1 1,2 2,2 | 1,3 2,3 3,3"></nn-diagram>
-      <nn-diagram slot="after" regions="1,1 1,2 2,2 | 1,3 2,3 3,3" shaded="1,1 1,2 2,3 3,3" excluded="2,2 1,3"></nn-diagram>
-    </nn-transition>
-  </div>
-</div>
-
-<!-- ═══ LEMMA 17 ═══ -->
-<div class="lemma" id="lemma-17">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 17</span><h2>L-Tromino Collinear Block</h2></div>
-  <p>In an L-tromino, if the cell beyond one end (A′) is unshaded or out of bounds,
-     then the cell beyond the corner on the same axis (B′) is also <strong>unshaded</strong>.
-     Both valid domino placements force B′ unshaded via Lemma 2.</p>
-  </div>
-  <div class="diagrams">
-    <nn-transition before-caption="Cell above end is unshaded" after-caption="Cell below corner also forced unshaded">
-      <nn-diagram slot="before" regions="2,2 2,3 3,3" excluded="2,1" unknown="2,4"></nn-diagram>
-      <nn-diagram slot="after" regions="2,2 2,3 3,3" excluded="2,1 2,4"></nn-diagram>
-    </nn-transition>
-  </div>
-</div>
-
-<!-- ═══ LEMMA 18 ═══ -->
-<div class="lemma" id="lemma-18">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 18</span><h2>L-Tromino Surrounded End</h2></div>
-  <p>In an L-tromino, if one end has all its external neighbors unshaded, it can only pair with the corner.
-     If the corner–other-end domino is also ruled out, then <strong>the surrounded end and the corner
-     are shaded</strong>, and the other end is unshaded.</p>
-  </div>
-  <div class="diagrams">
-    <nn-transition before-caption="A's 3 external neighbors all unshaded" after-caption="Once B–C ruled out: A and B shaded, C unshaded">
-      <nn-diagram slot="before" regions="2,2 3,2 3,1" excluded="2,1 1,2 2,3"></nn-diagram>
-      <nn-diagram slot="after" regions="2,2 3,2 3,1" excluded="2,1 1,2 2,3 3,1" shaded="2,2 3,2"></nn-diagram>
-    </nn-transition>
-  </div>
-</div>
-
-<!-- ═══ LEMMA 19 ═══ -->
-<div class="lemma" id="lemma-19">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 19</span><h2>Compass</h2></div>
-  <p>If a shaded cell has two <strong>consecutive</strong> cardinal neighbors unshaded (e.g. north and east),
-     it must pair with one of the other two. In both cases, the diagonal cell opposite the unshaded pair
-     is <strong>forced unshaded</strong> by Lemma 2.</p>
-  <div class="corollary">
-    ⟹ (N,E) unshaded → SW unshaded. Same for the other three rotations.
-  </div>
-  </div>
-  <div class="diagrams">
-    <nn-transition before-caption="N and E unshaded" after-caption="SW forced unshaded">
-      <nn-diagram slot="before" shaded="2,2" excluded="2,1 3,2" extents="1,1:3,3"></nn-diagram>
-      <nn-diagram slot="after" shaded="2,2" excluded="2,1 3,2 1,3" extents="1,1:3,3"></nn-diagram>
-    </nn-transition>
-  </div>
-</div>
+</details>
 
 <!-- ═══ SUMMARY TABLE ═══ -->
 <div class="summary-card" id="summary">
@@ -442,601 +377,27 @@
       <tr><td><b>A1</b></td><td>Two-cell region</td><td>Both cells shaded</td></tr>
       <tr><td><b>A2</b></td><td>Region saturation</td><td>2 shaded → rest unshaded; 2 left → both shaded</td></tr>
       <tr><td><b>A3</b></td><td>Isolated region</td><td>Domino must be internal</td></tr>
+      <tr><td><b>A4</b></td><td>Domino closure</td><td>All other neighbors unshaded</td></tr>
+      <tr><td><b>A5</b></td><td>Smothered cell</td><td>Cell itself must be unshaded</td></tr>
+      <tr><td><b>A6</b></td><td>Squeeze</td><td>That neighbor is shaded</td></tr>
+      <tr><td><b>A7</b></td><td>Three's a crowd</td><td>Middle cell is unshaded</td></tr>
+      <tr><td><b>A8</b></td><td>Checkerboard parity</td><td>#shaded dark = #shaded light; use to rule out impossible configurations</td></tr>
       <tr><td colspan="3" style="background:#eee;font-weight:700;font-size:.9em;padding:6px 12px;">Lemmas</td></tr>
-      <tr><td><b>1</b></td><td>Elbow</td><td>Cell completing the 2×2 square around an L-tromino is unshaded</td></tr>
-      <tr><td><b>2</b></td><td>Domino closure</td><td>All other neighbors unshaded</td></tr>
-      <tr><td><b>3</b></td><td>Squeeze</td><td>That neighbor is shaded</td></tr>
-      <tr><td><b>4</b></td><td>No three collinear</td><td>Middle cell is unshaded</td></tr>
-      <tr><td><b>6</b></td><td>Unique domino position</td><td>That pair must be shaded</td></tr>
-      <tr><td><b>8</b></td><td>Single external bridge</td><td>Bridge cell must be shaded</td></tr>
-      <tr><td><b>9</b></td><td>Checkerboard parity</td><td>#shaded dark = #shaded light; same-color region must cross boundary</td></tr>
-      <tr><td><b>10</b></td><td>Mutual exclusion</td><td>At most one region's domino can cross that edge</td></tr>
-      <tr><td><b>11</b></td><td>Snake / linear region</td><td>Remaining consecutive pairs narrow; often forces a specific cell</td></tr>
-      <tr><td><b>12</b></td><td>Smothered cell</td><td>Cell itself must be unshaded</td></tr>
-      <tr><td><b>13</b></td><td>Brainstem</td><td>The extra "brainstem" cell must be shaded</td></tr>
-      <tr><td><b>14</b></td><td>Peru 🇵🇪</td><td>Centers unshaded; outer columns form cross-region dominoes</td></tr>
-      <tr><td><b>15</b></td><td>Two 3-cell regions, 2 shared edges</td><td>Non-adjacent cell in each region must be shaded</td></tr>
-      <tr><td><b>16</b></td><td>L-tromino corner</td><td>C's two external neighbors are unshaded</td></tr>
-      <tr><td><b>16b</b></td><td>Staircase</td><td>L-tromino over a straight 3-cell: both regions fully determined</td></tr>
-      <tr><td><b>17</b></td><td>L-tromino collinear block</td><td>Cell past end A unshaded ⟹ cell past corner B also unshaded</td></tr>
-      <tr><td><b>18</b></td><td>L-tromino surrounded end</td><td>When B–C is ruled out, A and B are shaded, C is unshaded</td></tr>
-      <tr><td><b>19</b></td><td>Compass</td><td>The diagonal not touching either unshaded cell is also unshaded</td></tr>
+      <tr><td><b>1</b></td><td>Forlorn quarter</td><td>Cell completing the 2×2 square around an L-tromino is unshaded</td></tr>
+      <tr><td><b>2</b></td><td>Corner lock</td><td>L-tromino corner cell always pairs internally; cannot cross regions</td></tr>
+      <tr><td><b>3</b></td><td>Elbow</td><td>Cell past one end unshaded ⟹ cell past corner also unshaded</td></tr>
+      <tr><td><b>4</b></td><td>Stash</td><td>Surrounded end + corner shaded; other end unshaded</td></tr>
+      <tr><td><b>5</b></td><td>Brainstem</td><td>The extra "brainstem" cell must be shaded</td></tr>
+      <tr><td><b>6</b></td><td>Clasp</td><td>Centers unshaded; outer columns form cross-region dominoes</td></tr>
+      <tr><td><b>7</b></td><td>Friction</td><td>Non-adjacent cell in each region must be shaded</td></tr>
+      <tr><td><b>7b</b></td><td>Staircase</td><td>L-tromino over a straight 3-cell: both regions fully determined</td></tr>
+      <tr><td><b>8</b></td><td>Compass</td><td>The diagonal not touching either unshaded cell is also unshaded</td></tr>
     </tbody>
   </table>
 </div>
 
 <p style="text-align:center;color:#aaa;font-size:.8em">Norinori Lemmas Reference · Generated 2026</p>
-<script>
-class NNDiagram extends HTMLElement {
-  static get observedAttributes() {
-    return ['regions', 'shaded', 'excluded', 'unknown', 'ish', 'labels', 'baseline', 'checkerboard', 'extents'];
-  }
-
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-  }
-
-  connectedCallback() { this.render(); }
-  attributeChangedCallback() { this.render(); }
-
-  static parseCoord(s) {
-    const [x, y] = s.split(',').map(Number);
-    return { x, y };
-  }
-
-  static parseRegionToken(token) {
-    token = token.trim();
-    if (token.includes(':')) {
-      const [from, to] = token.split(':');
-      const a = NNDiagram.parseCoord(from);
-      const b = NNDiagram.parseCoord(to);
-      const cells = [];
-      const x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x);
-      const y0 = Math.min(a.y, b.y), y1 = Math.max(a.y, b.y);
-      for (let y = y0; y <= y1; y++)
-        for (let x = x0; x <= x1; x++)
-          cells.push({ x, y });
-      return cells;
-    }
-    return [NNDiagram.parseCoord(token)];
-  }
-
-  static parseRegion(s) {
-    return s.trim().split(/\s+/).flatMap(NNDiagram.parseRegionToken);
-  }
-
-  static parseCoordList(s) {
-    if (!s || !s.trim()) return [];
-    return s.trim().split(/\s+/).map(NNDiagram.parseCoord);
-  }
-
-  static parseLabelList(s) {
-    const map = new Map();
-    if (!s || !s.trim()) return map;
-    const tokens = s.trim().split(/\s+/);
-    for (const tok of tokens) {
-      const idx = tok.indexOf(':');
-      if (idx === -1) continue;
-      const coord = tok.substring(0, idx);
-      const text = tok.substring(idx + 1);
-      map.set(coord, text);
-    }
-    return map;
-  }
-
-  static key(x, y) { return `${x},${y}`; }
-
-  render() {
-    const regionsAttr = this.getAttribute('regions') || '';
-    const shadedList = NNDiagram.parseCoordList(this.getAttribute('shaded'));
-    const excludedList = NNDiagram.parseCoordList(this.getAttribute('excluded'));
-    const unknownList = NNDiagram.parseCoordList(this.getAttribute('unknown'));
-    const ishList = NNDiagram.parseCoordList(this.getAttribute('ish'));
-    const labelMap = NNDiagram.parseLabelList(this.getAttribute('labels'));
-
-    // ── Read CSS custom properties ──
-    const cs = getComputedStyle(this);
-    const cssVar = (name, fallback) => {
-      const v = cs.getPropertyValue(name).trim();
-      return v || fallback;
-    };
-    const cssNum = (name, fallback) => {
-      const v = parseFloat(cs.getPropertyValue(name));
-      return isNaN(v) ? fallback : v;
-    };
-
-    const COL = {
-      shaded:   cssVar('--nn-shaded', '#f0b429'),
-      ish:      cssVar('--nn-ish', '#f5e6c8'),
-      excluded: cssVar('--nn-excluded', '#c00'),
-      unknown:  cssVar('--nn-unknown', '#bbb'),
-      label:    cssVar('--nn-label', '#444'),
-      grid:     cssVar('--nn-grid', '#999'),
-      region:   cssVar('--nn-region-border', '#000'),
-      cell:     cssVar('--nn-cell-bg', '#fff'),
-      caption:  cssVar('--nn-caption', '#666'),
-      checker:  cssVar('--nn-checker', '#c0c0c0'),
-    };
-    const C     = cssNum('--nn-cell-size', 36);
-    const THIN  = cssNum('--nn-grid-width', 1);
-    const THICK = cssNum('--nn-region-width', 3);
-    const checkerboard = this.hasAttribute('checkerboard');
-
-    const regions = regionsAttr
-      ? regionsAttr.split('|').map(NNDiagram.parseRegion)
-      : [];
-
-    const regionOf = new Map();
-    regions.forEach((cells, ri) => {
-      for (const c of cells) regionOf.set(NNDiagram.key(c.x, c.y), ri);
-    });
-
-    const allCells = [
-      ...shadedList, ...excludedList, ...unknownList, ...ishList,
-      ...regions.flat(),
-      ...[...labelMap.keys()].map(NNDiagram.parseCoord)
-    ];
-
-    if (allCells.length === 0) {
-      this.shadowRoot.innerHTML = '';
-      return;
-    }
-
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    for (const c of allCells) {
-      minX = Math.min(minX, c.x); maxX = Math.max(maxX, c.x);
-      minY = Math.min(minY, c.y); maxY = Math.max(maxY, c.y);
-    }
-
-    // Override bounding box with explicit extents if provided
-    const extentsAttr = this.getAttribute('extents');
-    if (extentsAttr) {
-      const [from, to] = extentsAttr.split(':');
-      const a = NNDiagram.parseCoord(from);
-      const b = NNDiagram.parseCoord(to);
-      minX = Math.min(minX, a.x); maxX = Math.max(maxX, b.x);
-      minY = Math.min(minY, a.y); maxY = Math.max(maxY, b.y);
-    }
-
-    const pMinX = minX - 1, pMaxX = maxX + 1;
-    const pMinY = minY - 1, pMaxY = maxY + 1;
-    const contentCols = maxX - minX + 1;
-    const contentRows = maxY - minY + 1;
-
-    const stateMap = new Map();
-    for (const c of shadedList) stateMap.set(NNDiagram.key(c.x, c.y), 'shaded');
-    for (const c of excludedList) stateMap.set(NNDiagram.key(c.x, c.y), 'excluded');
-    for (const c of unknownList) stateMap.set(NNDiagram.key(c.x, c.y), 'unknown');
-    for (const c of ishList) stateMap.set(NNDiagram.key(c.x, c.y), 'ish');
-
-    const HC = C / 2;
-    // Total SVG size: half cell padding + content cells + half cell padding
-    // Plus an extra half cell on each side for stubs to extend into
-    const svgW = HC + HC + contentCols * C + HC + HC;
-    const svgH = HC + HC + contentRows * C + HC + HC;
-
-    // Offset everything so the content area starts at HC + HC
-    const OX = HC;  // extra offset for stub space
-    const OY = HC;
-
-    // Pixel position helper: maps grid coord to pixel x/y (top-left of cell)
-    const cellX = (gx) => {
-      if (gx < minX) return OX;                              // left half-cell
-      if (gx > maxX) return OX + HC + (gx - minX) * C;       // right half-cell
-      return OX + HC + (gx - minX) * C;                       // content cell
-    };
-    const cellY = (gy) => {
-      if (gy < minY) return OY;                               // top half-cell
-      if (gy > maxY) return OY + HC + (gy - minY) * C;        // bottom half-cell
-      return OY + HC + (gy - minY) * C;                        // content cell
-    };
-    const cellW = (gx) => (gx < minX || gx > maxX) ? HC : C;
-    const cellH = (gy) => (gy < minY || gy > maxY) ? HC : C;
-
-    let svg = '';
-
-    // ── Cell backgrounds (non-shaded only) ──
-    for (let gy = pMinY; gy <= pMaxY; gy++) {
-      for (let gx = pMinX; gx <= pMaxX; gx++) {
-        const k = NNDiagram.key(gx, gy);
-        const inBBox = gx >= minX && gx <= maxX && gy >= minY && gy <= maxY;
-        const state = stateMap.get(k);
-        const px = cellX(gx);
-        const py = cellY(gy);
-        const cw = cellW(gx);
-        const ch = cellH(gy);
-
-        const isDark = (gx + gy) % 2 === 0;
-        const cellBg = (checkerboard && inBBox) ? (isDark ? COL.checker : COL.cell) : (inBBox ? COL.cell : 'transparent');
-
-        // Skip shaded/ish cells — they'll be drawn later as merged shapes
-        if (state === 'shaded' || state === 'ish') {
-          svg += `<rect x="${px}" y="${py}" width="${cw}" height="${ch}" fill="${cellBg}"/>`;
-          continue;
-        }
-
-        svg += `<rect x="${px}" y="${py}" width="${cw}" height="${ch}" fill="${cellBg}"/>`;
-      }
-    }
-
-    // Helper: find connected components of cells with a given state
-    function findConnectedComponents(cells) {
-      const cellSet = new Set(cells.map(c => NNDiagram.key(c.x, c.y)));
-      const visited = new Set();
-      const components = [];
-      for (const c of cells) {
-        const k = NNDiagram.key(c.x, c.y);
-        if (visited.has(k)) continue;
-        // BFS
-        const component = [];
-        const queue = [c];
-        visited.add(k);
-        while (queue.length) {
-          const cur = queue.shift();
-          component.push(cur);
-          for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
-            const nk = NNDiagram.key(cur.x + dx, cur.y + dy);
-            if (cellSet.has(nk) && !visited.has(nk)) {
-              visited.add(nk);
-              queue.push({ x: cur.x + dx, y: cur.y + dy });
-            }
-          }
-        }
-        components.push(component);
-      }
-      return components;
-    }
-
-    // Build merged paths for shaded and ish cells (drawn after gridlines)
-    const shadedShapes = findConnectedComponents(shadedList);
-    const ishShapes = findConnectedComponents(ishList);
-
-    function buildMergedPath(cells) {
-      // For each cell, trace its rect as a subpath
-      // Using a single path with fill-rule ensures no overlap doubling
-      let d = '';
-      for (const c of cells) {
-        const px = cellX(c.x);
-        const py = cellY(c.y);
-        const cw = cellW(c.x);
-        const ch = cellH(c.y);
-        d += `M${px},${py}h${cw}v${ch}h${-cw}z `;
-      }
-      return d;
-    }
-
-    // ── Gridlines with fading stubs ──
-    // All cells in the bounding box are "content" for gridline purposes.
-    const isContent = (gx, gy) => gx >= minX && gx <= maxX && gy >= minY && gy <= maxY;
-
-    // Helper: draw a fading stub as a few short segments with decreasing opacity
-    const STUB_LEN = HC;
-    const STUB_SEGS = 4;
-    const stubSegLen = STUB_LEN / STUB_SEGS;
-    function drawStub(x1, y1, dx, dy) {
-      let s = '';
-      for (let i = 0; i < STUB_SEGS; i++) {
-        const opacity = 1 - (i + 0.5) / STUB_SEGS;
-        const sx = x1 + dx * stubSegLen * i;
-        const sy = y1 + dy * stubSegLen * i;
-        s += `<line x1="${sx}" y1="${sy}" x2="${sx + dx * stubSegLen}" y2="${sy + dy * stubSegLen}" stroke="${COL.grid}" stroke-width="${THIN}" opacity="${opacity.toFixed(2)}"/>`;
-      }
-      return s;
-    }
-
-    // Draw horizontal gridlines.
-    for (let gy = minY; gy <= maxY + 1; gy++) {
-      let runStart = -1;
-      for (let gx = minX; gx <= maxX; gx++) {
-        const above = gy > minY ? isContent(gx, gy - 1) : false;
-        const below = gy <= maxY ? isContent(gx, gy) : false;
-        const active = above || below;
-
-        if (active && runStart === -1) runStart = gx;
-        if ((!active || gx === maxX) && runStart !== -1) {
-          const endGx = active ? gx : gx - 1;
-          const x1 = cellX(runStart);
-          const x2 = cellX(endGx) + cellW(endGx);
-          const y = (gy <= maxY) ? cellY(gy) : cellY(maxY) + cellH(maxY);
-
-          svg += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${COL.grid}" stroke-width="${THIN}"/>`;
-          svg += drawStub(x1, y, -1, 0); // left stub
-          svg += drawStub(x2, y, 1, 0);  // right stub
-
-          runStart = -1;
-        }
-      }
-    }
-
-    // Draw vertical gridlines.
-    for (let gx = minX; gx <= maxX + 1; gx++) {
-      let runStart = -1;
-      for (let gy = minY; gy <= maxY; gy++) {
-        const left = gx > minX ? isContent(gx - 1, gy) : false;
-        const right = gx <= maxX ? isContent(gx, gy) : false;
-        const active = left || right;
-
-        if (active && runStart === -1) runStart = gy;
-        if ((!active || gy === maxY) && runStart !== -1) {
-          const endGy = active ? gy : gy - 1;
-          const y1 = cellY(runStart);
-          const y2 = cellY(endGy) + cellH(endGy);
-          const x = (gx <= maxX) ? cellX(gx) : cellX(maxX) + cellW(maxX);
-
-          svg += `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${COL.grid}" stroke-width="${THIN}"/>`;
-          svg += drawStub(x, y1, 0, -1); // top stub
-          svg += drawStub(x, y2, 0, 1);  // bottom stub
-
-          runStart = -1;
-        }
-      }
-    }
-
-    // ── Shaded overlays (semi-transparent, drawn over gridlines) ──
-    for (const comp of shadedShapes) {
-      svg += `<path d="${buildMergedPath(comp)}" fill="${COL.shaded}" style="mix-blend-mode:multiply" fill-rule="nonzero"/>`;
-    }
-    for (const comp of ishShapes) {
-      svg += `<path d="${buildMergedPath(comp)}" fill="${COL.ish}" style="mix-blend-mode:multiply" fill-rule="nonzero"/>`;
-    }
-
-    // ── Cell content (text) — only for full-size content cells ──
-    for (let gy = minY; gy <= maxY; gy++) {
-      for (let gx = minX; gx <= maxX; gx++) {
-        const k = NNDiagram.key(gx, gy);
-        const state = stateMap.get(k);
-        const label = labelMap.get(k);
-        const cx = cellX(gx) + C / 2;
-        const cy = cellY(gy) + C / 2;
-
-        let text = '';
-        let fill = '';
-        let fontSize = Math.round(C * 0.47);  // default
-        let fontStyle = '';
-
-        if (label) {
-          text = label;
-          fill = (state === 'shaded' || state === 'ish') ? COL.cell : COL.label;
-          fontSize = Math.round(C * 0.36);
-        } else if (state === 'excluded') {
-          text = '\u2715';
-          fill = COL.excluded;
-          fontSize = Math.round(C * 0.42);
-        } else if (state === 'unknown') {
-          text = '?';
-          fill = COL.unknown;
-          fontSize = Math.round(C * 0.47);
-          fontStyle = ' font-style="italic"';
-        }
-
-        if (text) {
-          svg += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="'Segoe UI', system-ui, sans-serif" font-weight="bold" font-size="${fontSize}" fill="${fill}"${fontStyle}>${text}</text>`;
-        }
-      }
-    }
-
-    // ── Region borders (thick) — traced as closed contour paths ──
-    // For each region, trace the outer boundary as a single path to avoid
-    // overlapping segments at corners.
-    function traceRegionContour(regionCells, ri) {
-      // Build a set of cells in this region
-      const cellSet = new Set(regionCells.map(c => NNDiagram.key(c.x, c.y)));
-
-      // Collect all boundary edges as directed segments (going clockwise).
-      // Each edge is between a cell in the region and a cell outside it.
-      // We store edges as grid-corner coordinates: each cell (gx,gy) occupies
-      // corners (gx,gy)-(gx+1,gy+1) in corner-space.
-      const edges = [];
-      for (const c of regionCells) {
-        const { x: gx, y: gy } = c;
-        // Top edge: if cell above is not in region
-        if (!cellSet.has(NNDiagram.key(gx, gy - 1))) {
-          edges.push({ x1: gx, y1: gy, x2: gx + 1, y2: gy }); // left to right
-        }
-        // Bottom edge
-        if (!cellSet.has(NNDiagram.key(gx, gy + 1))) {
-          edges.push({ x1: gx + 1, y1: gy + 1, x2: gx, y2: gy + 1 }); // right to left
-        }
-        // Left edge
-        if (!cellSet.has(NNDiagram.key(gx - 1, gy))) {
-          edges.push({ x1: gx, y1: gy + 1, x2: gx, y2: gy }); // bottom to top
-        }
-        // Right edge
-        if (!cellSet.has(NNDiagram.key(gx + 1, gy))) {
-          edges.push({ x1: gx + 1, y1: gy, x2: gx + 1, y2: gy + 1 }); // top to bottom
-        }
-      }
-
-      // Chain edges into closed loops.
-      // Build adjacency: from endpoint -> list of edges starting there
-      const edgeMap = new Map();
-      for (const e of edges) {
-        const k = e.x1 + ',' + e.y1;
-        if (!edgeMap.has(k)) edgeMap.set(k, []);
-        edgeMap.get(k).push(e);
-      }
-
-      const used = new Set();
-      const paths = [];
-
-      for (const e of edges) {
-        const eid = `${e.x1},${e.y1}-${e.x2},${e.y2}`;
-        if (used.has(eid)) continue;
-
-        const loop = [];
-        let cur = e;
-        while (cur) {
-          const cid = `${cur.x1},${cur.y1}-${cur.x2},${cur.y2}`;
-          if (used.has(cid)) break;
-          used.add(cid);
-          loop.push(cur);
-          // Find next edge starting at cur's endpoint
-          const nextKey = cur.x2 + ',' + cur.y2;
-          const candidates = edgeMap.get(nextKey) || [];
-          cur = candidates.find(c => !used.has(`${c.x1},${c.y1}-${c.x2},${c.y2}`));
-        }
-
-        if (loop.length > 0) paths.push(loop);
-      }
-
-      // Convert grid-corner coords to pixel coords and build SVG path
-      function cornerToPixel(cx, cy) {
-        // Corner (cx, cy) in grid-corner space maps to the intersection
-        // of gridlines at column cx, row cy
-        const px = (cx >= minX && cx <= maxX + 1)
-          ? cellX(Math.min(cx, maxX)) + (cx > maxX ? cellW(maxX) : 0)
-          : (cx < minX ? cellX(minX) : cellX(maxX) + cellW(maxX));
-        const py = (cy >= minY && cy <= maxY + 1)
-          ? cellY(Math.min(cy, maxY)) + (cy > maxY ? cellH(maxY) : 0)
-          : (cy < minY ? cellY(minY) : cellY(maxY) + cellH(maxY));
-        return { px, py };
-      }
-
-      // Simpler corner mapping: corner (cx, cy) is at the top-left of cell (cx, cy)
-      function ctp(cx, cy) {
-        // x position
-        let px;
-        if (cx <= minX) px = cellX(minX);
-        else if (cx > maxX) px = cellX(maxX) + cellW(maxX);
-        else px = cellX(cx);
-        // y position
-        let py;
-        if (cy <= minY) py = cellY(minY);
-        else if (cy > maxY) py = cellY(maxY) + cellH(maxY);
-        else py = cellY(cy);
-        return { px, py };
-      }
-
-      let d = '';
-      for (const loop of paths) {
-        const start = ctp(loop[0].x1, loop[0].y1);
-        d += `M${start.px},${start.py}`;
-        for (const seg of loop) {
-          const end = ctp(seg.x2, seg.y2);
-          d += `L${end.px},${end.py}`;
-        }
-        d += 'Z ';
-      }
-
-      return d;
-    }
-
-    // Group cells by region index and draw each region's contour
-    const regionGroups = new Map();
-    for (const [k, ri] of regionOf) {
-      if (!regionGroups.has(ri)) regionGroups.set(ri, []);
-      regionGroups.get(ri).push(NNDiagram.parseCoord(k));
-    }
-
-    for (const [ri, cells] of regionGroups) {
-      const d = traceRegionContour(cells, ri);
-      svg += `<path d="${d}" fill="none" stroke="${COL.region}" stroke-width="${THICK}" stroke-linejoin="round"/>`;
-    }
-
-    const fullSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">${svg}</svg>`;
-
-    // ── Baseline alignment ──
-    // If baseline attribute is set, offset so that row's center is at
-    // the element's vertical midpoint. Default: center of content area.
-    const baselineAttr = this.getAttribute('baseline');
-    const svgCenter = svgH / 2;
-    let baselineY;
-    if (baselineAttr) {
-      const bRow = parseFloat(baselineAttr);
-      // Center of the specified row
-      baselineY = cellY(bRow) + C / 2;
-    } else {
-      // Default: center of the content area
-      baselineY = cellY(minY) + (contentRows * C) / 2;
-    }
-    const offset = svgCenter - baselineY;
-    const marginStyle = offset !== 0
-      ? `margin-top: ${-offset}px; margin-bottom: ${offset}px;`
-      : '';
-
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
-        .wrap { ${marginStyle} }
-      </style>
-      <div class="wrap">${fullSVG}</div>
-    `;
-  }
-}
-
-customElements.define('nn-diagram', NNDiagram);
-
-class NNTransition extends HTMLElement {
-  static get observedAttributes() {
-    return ['before-caption', 'after-caption'];
-  }
-
-  constructor() {
-    super();
-    this.attachShadow({ mode: 'open' });
-  }
-
-  connectedCallback() { this.syncExtents(); this.render(); }
-  attributeChangedCallback() { this.render(); }
-
-  syncExtents() {
-    // Find the two nn-diagram children and compute shared extents
-    const diagrams = [...this.querySelectorAll('nn-diagram')];
-    if (diagrams.length < 2) return;
-
-    // Collect all coordinates from both diagrams
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-
-    for (const d of diagrams) {
-      const attrs = ['regions', 'shaded', 'excluded', 'unknown', 'ish', 'labels', 'extents'];
-      for (const attr of attrs) {
-        const val = d.getAttribute(attr);
-        if (!val) continue;
-        const coords = val.match(/\d+,\d+/g);
-        if (!coords) continue;
-        for (const c of coords) {
-          const [x, y] = c.split(',').map(Number);
-          minX = Math.min(minX, x); maxX = Math.max(maxX, x);
-          minY = Math.min(minY, y); maxY = Math.max(maxY, y);
-        }
-      }
-    }
-
-    if (minX === Infinity) return;
-
-    // Apply shared extents to both diagrams
-    const ext = `${minX},${minY}:${maxX},${maxY}`;
-    for (const d of diagrams) {
-      d.setAttribute('extents', ext);
-    }
-  }
-
-  render() {
-    const beforeCap = this.getAttribute('before-caption') || '';
-    const afterCap = this.getAttribute('after-caption') || '';
-
-    this.shadowRoot.innerHTML = `
-      <style>
-        :host { display: inline-grid; grid-template-columns: auto auto auto; grid-template-rows: auto auto; gap: 0 12px; }
-        .arrow { font-size: 26px; color: #999; grid-row: 1; grid-column: 2; text-align: center; align-self: center; }
-        slot[name="before"] { grid-row: 1; grid-column: 1; display: flex; justify-content: center; }
-        slot[name="after"] { grid-row: 1; grid-column: 3; display: flex; justify-content: center; }
-        .cap-before { grid-row: 2; grid-column: 1; }
-        .cap-after { grid-row: 2; grid-column: 3; }
-        .cap-before, .cap-after { font-family: 'Segoe UI', system-ui, sans-serif; font-size: .78em; color: #666; font-style: italic; text-align: center; max-width: 180px; justify-self: center; margin-top: 4px; }
-      </style>
-      <slot name="before"></slot>
-      <div class="arrow">→</div>
-      <slot name="after"></slot>
-      ${beforeCap ? `<div class="cap-before">${beforeCap}</div>` : ''}
-      ${afterCap ? `<div class="cap-after">${afterCap}</div>` : ''}
-    `;
-  }
-}
-
-customElements.define('nn-transition', NNTransition);
-</script>
+<script src="nn-diagram.js?v=2"></script>
 
 </body>
 </html>
