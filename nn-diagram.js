@@ -1,6 +1,6 @@
 class NNDiagram extends HTMLElement {
   static get observedAttributes() {
-    return ['regions', 'shaded', 'excluded', 'unknown', 'ish', 'labels', 'baseline', 'checkerboard', 'extents', 'stubs', 'show-errors'];
+    return ['regions', 'shaded', 'excluded', 'unknown', 'ish', 'labels', 'baseline', 'checkerboard', 'extents', 'continue', 'show-errors'];
   }
 
   constructor() {
@@ -71,7 +71,7 @@ class NNDiagram extends HTMLElement {
     const unknownList = NNDiagram.parseCoordList(this.getAttribute('unknown'));
     const ishList = NNDiagram.parseCoordList(this.getAttribute('ish'));
     const labelMap = NNDiagram.parseLabelList(this.getAttribute('labels'));
-    const stubSides = NNDiagram.parseStubs(this.getAttribute('stubs'));
+    const stubSides = NNDiagram.parseStubs(this.getAttribute('continue'));
 
     // ── Read CSS custom properties ──
     const cs = getComputedStyle(this);

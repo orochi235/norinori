@@ -68,6 +68,7 @@
     <li>The grid is divided into <strong>regions</strong> (shown by thick borders).</li>
     <li>Shade exactly <strong>2 cells</strong> in every region.</li>
     <li>Every shaded cell must belong to a <strong>domino</strong> — a pair of orthogonally adjacent shaded cells.</li>
+    <li>No two dominoes may be <strong>orthogonally adjacent</strong> — each shaded cell has exactly one shaded neighbor.</li>
     <li>Dominoes <em>may</em> cross region boundaries.</li>
   </ul>
   <p style="font-size:.9em;margin-top:8px;"><a href="#axiom-1">See axioms below</a> for basic operations.</p>
@@ -372,7 +373,7 @@
     </div>
   </div>
     <div class="diagrams">
-      <figure><nn-diagram checkerboard stubs="none"
+      <figure><nn-diagram checkerboard continue="none"
         regions="1,1 1,2 1,3:3,2 | 4,1 4,2 3,3:4,3 | 2,1 3,1 | 1,4:4,4"
         shaded="2,1 3,1 1,2 4,2 1,3 4,3 2,4 3,4"
         ></nn-diagram><figcaption>Every domino covers one dark + one light cell</figcaption></figure>
