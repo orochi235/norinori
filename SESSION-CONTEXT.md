@@ -11,10 +11,10 @@ A reference document for Norinori puzzle solving techniques, built around a cust
 
 **Repo**: `~/src/norinori/`
 **Files**:
-- `norinori-lemmas.html` — main reference document (all lemmas + inline component JS)
-- `nn-diagram.js` — standalone component source (extracted from test page)
+- `index.html` — main reference document (all lemmas)
+- `nn-diagram.js` — standalone component source
 - `nn-diagram-test.html` — component test page (~12 test cases)
-- `nn-diagram-docs.md` — component docs, terminology, pattern shorthand
+- `README.md` — component documentation
 
 ---
 
@@ -41,14 +41,14 @@ A reference document for Norinori puzzle solving techniques, built around a cust
 | **undetermined** | Unknown state (grey `?`, attribute: `unknown`) |
 | **incidentally shaded (ish)** | Shaded but not focal (light manila `#f5e6c8`) |
 | **out** | Cell outside any group, transparent background |
-| **stub** | Short fading gridline extending from content into empty space |
+| **continue** | Fading gridline extending from content into empty space (attribute: `continue`) |
 | **content cell** | Any cell with group membership, state, or label |
 
 ---
 
 ## nn-diagram Component
 
-**Rendering**: Pure SVG. Cell backgrounds, gridlines, region borders, text, stubs all drawn at exact pixel coordinates.
+**Rendering**: Pure SVG. Cell backgrounds, gridlines, region borders, text, continuation lines all drawn at exact pixel coordinates.
 
 ### Attributes
 
@@ -63,6 +63,8 @@ A reference document for Norinori puzzle solving techniques, built around a cust
 | `baseline` | Row number for vertical alignment centering |
 | `checkerboard` | Boolean, draws alternating dark/light cell backgrounds |
 | `extents` | `x1,y1:x2,y2` to force minimum bounding box |
+| `continue` | Which sides extend fading gridlines beyond the grid. Values: `all` (default), `none`, or subset of `top bottom left right` |
+| `show-errors` | Boolean, highlights regions without exactly 2 shaded cells |
 
 ### CSS Custom Properties
 
@@ -81,11 +83,12 @@ A reference document for Norinori puzzle solving techniques, built around a cust
 | `--nn-cell-bg` | `#fff` | Cell background color |
 | `--nn-checker` | `#c0c0c0` | Checkerboard dark square color |
 | `--nn-caption` | `#666` | Caption text color |
+| `--nn-error` | `#e03030` | Error highlight color |
 
 ### Key Rendering Details
 
 - Grid size inferred from bounding box of all mentioned cells, +1 padding ring rendered at half-cell size
-- Gridlines drawn per-edge; stubs fade outward from content cells (4 segments with decreasing opacity)
+- Gridlines drawn per-edge; continuation lines fade outward from content cells (4 segments with decreasing opacity)
 - Shaded overlays: connected components merged into single `<path>`, drawn with `mix-blend-mode: multiply`
 - Region borders: contour-traced as closed paths (no corner overlap), `stroke-linejoin: round`
 - Font sizes proportional to cell size: ✕ at 42%, ? at 47%, labels at 36%
@@ -93,21 +96,23 @@ A reference document for Norinori puzzle solving techniques, built around a cust
 
 ---
 
-## nn-transition Component
+## nn-sequence Component
 
-Wraps two `<nn-diagram>` children (slots `before`/`after`) with an arrow between them.
+Wraps multiple `<nn-diagram>` children in a row with arrow separators and optional captions.
 
-- Auto-syncs `extents` across both diagrams so they render at same size
-- Grid layout: row 1 = diagrams + arrow (arrow vertically centered), row 2 = captions
-- Attributes: `before-caption`, `after-caption`
+- Auto-syncs `extents` across all child diagrams so they render at same size
+- Grid layout: row 1 = diagrams + arrows (arrows vertically centered), row 2 = captions
+- Attribute: `captions` — pipe-separated caption list (e.g., `"Before | After"`)
+- `<nn-transition>` is a backwards-compatibility alias
 
 ### Usage
 
 ```html
-<nn-transition before-caption="..." after-caption="...">
-  <nn-diagram slot="before" shaded="..." ></nn-diagram>
-  <nn-diagram slot="after" shaded="..." ></nn-diagram>
-</nn-transition>
+<nn-sequence captions="Start | Middle | End">
+  <nn-diagram regions="..." unknown="..."></nn-diagram>
+  <nn-diagram regions="..." shaded="..."></nn-diagram>
+  <nn-diagram regions="..." shaded="..." excluded="..."></nn-diagram>
+</nn-sequence>
 ```
 
 ---
@@ -155,8 +160,6 @@ Two-column grid per lemma/axiom:
 
 `#axiom-1` through `#axiom-3`, `#lemma-1` through `#lemma-19` (including `#lemma-16b`), `#summary`
 
-Note: anchors in present_files URLs don't work with Claude's preview system.
-
 ### Summary Table
 
 At bottom of page, anchored at `#summary`. Split into Axioms and Lemmas sections with grey section headers.
@@ -194,38 +197,15 @@ AFHFFG
 - [DECISION] Region borders as contour-traced paths with rounded joins
 - [DECISION] Shaded overlay uses mix-blend-mode: multiply
 - [DECISION] Out cells transparent (not grey)
-- [DECISION] Half-cell padding ring with fading stubs
-- [DECISION] nn-transition auto-syncs extents for matched diagram sizing
+- [DECISION] Half-cell padding ring with fading continuation lines
+- [DECISION] nn-sequence auto-syncs extents for matched diagram sizing
 - [DECISION] Two-column layout: text card left, diagrams right
-
----
-
-## Conversation Style Preferences
-
-- Mike speaks US English
-- When Mike uses inaccurate terminology or misspells a word, bold and italicize the correct usage inline in conversation (not in generated output)
-- Concise responses preferred
-- Don't be sycophantic — only praise genuinely notable ideas
-- Pattern shorthand: O=shaded, X=excluded, ?/_=unknown, / for row separator
 
 ---
 
 ## Pending / Known Issues
 
 - [ ] Lemma numbering has gaps (5, 7) from axiom promotion — consider renumbering
-- [ ] Component JS duplicated inline in both HTML files — consider `<script src>`
-- [ ] Update nn-diagram-docs.md with all latest changes
-- [ ] nn-diagram-test.html still has old component (no multiply blend, no rounded joins)
 - [ ] Lemma 10 diagrams are new and may need refinement
 - [ ] Lemma 9 could use a second diagram illustrating the parity constraint
 - [ ] Lemma 15 may have region overlap issue (cell in two regions)
-
----
-
-## Git History
-
-```
-c022ad2 Visual polish: darker gridlines, rounded region borders, multiply blend mode
-979fd43 Session progress: component refinements, lemma edits, nn-transition
-94ee640 Initial commit: nn-diagram web component and Norinori lemma reference
-```
