@@ -81,7 +81,7 @@
   <p>In an L-shaped 3-cell region, the cell that would complete the 2×2 square
      <strong>cannot be shaded</strong>. The region's domino must pass through the corner cell
      (since the two ends aren't adjacent), and in either orientation, that diagonal cell
-     is a neighbor of the domino — forced unshaded by Lemma 2.</p>
+     is a neighbor of the domino — forced unshaded by Axiom 5.</p>
   </div>
   <div class="diagrams">
     <figure><nn-diagram regions="1,1 1,2 2,2" excluded="2,1"></nn-diagram><figcaption>Diagonal cell forced unshaded</figcaption></figure>
@@ -212,10 +212,10 @@
   <div class="lemma-text">
   <div class="lemma-header"><span class="lemma-num">LEMMA 7b</span><h2>Staircase</h2></div>
   <p>When an L-tromino sits on top of a straight 3-cell region, the solution is fully determined.
-     The L-tromino's corner excludes the cell below it (Lemma 16), which forces the straight region's
+     The L-tromino's corner excludes the cell below it (Lemma 2 + Axiom 5), which forces the straight region's
      domino to the far end. That in turn excludes the L-tromino's inner end, locking in its domino.</p>
   <div class="corollary">
-    ⟹ Corollary of Lemma 16 + Axiom 2.
+    ⟹ Corollary of Lemma 2, Axiom 3, and Axiom 5.
   </div>
   </div>
   <div class="diagrams">
@@ -232,7 +232,7 @@
   <div class="lemma-header"><span class="lemma-num">LEMMA 8</span><h2>Compass</h2></div>
   <p>If a shaded cell has two <strong>consecutive</strong> cardinal neighbors unshaded (e.g. north and east),
      it must pair with one of the other two. In both cases, the diagonal cell opposite the unshaded pair
-     is <strong>forced unshaded</strong> by Lemma 2.</p>
+     is <strong>forced unshaded</strong> by Axiom 5.</p>
   <div class="corollary">
     ⟹ (N,E) unshaded → SW unshaded. Same for the other three rotations.
   </div>
