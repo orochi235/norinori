@@ -377,10 +377,17 @@ class NNDiagram extends HTMLElement {
             (isBottomEdge && !fadeBottom);
           const hLineW = isHardEdge ? 6 : THIN;
           const hStroke = isHardEdge ? '#000' : COL.grid;
-          // Offset hard edges outward by half stroke width so the cell
-          // doesn't appear clipped by the thick puzzle border.
-          const hy = isHardEdge ? (isTopEdge ? y - hLineW / 2 : y + hLineW / 2) : y;
-          const hLine = `<line x1="${x1}" y1="${hy}" x2="${x2}" y2="${hy}" stroke="${hStroke}" stroke-width="${hLineW}"/>`;
+          // Offset so the hard edge's inner face sits just inside the region
+          // contour (covering its outer half), aligning with y ± THICK/2.
+          const hardOffset = hLineW / 2 - THICK / 2;
+          const hy = isHardEdge ? (isTopEdge ? y - hardOffset : y + hardOffset) : y;
+          // Extend hard edges at corners so they reach the outer face of the
+          // adjacent vertical hard edge (distance = hLineW - THICK/2 from the
+          // cell boundary).
+          const hCornerExt = hLineW - THICK / 2;
+          const hx1 = (isHardEdge && !fadeLeft  && runStart === eMinX) ? x1 - hCornerExt : x1;
+          const hx2 = (isHardEdge && !fadeRight && endGx   === eMaxX) ? x2 + hCornerExt : x2;
+          const hLine = `<line x1="${hx1}" y1="${hy}" x2="${hx2}" y2="${hy}" stroke="${hStroke}" stroke-width="${hLineW}"/>`;
           if (isHardEdge) hardEdgeSvg += hLine; else svg += hLine;
 
           runStart = -1;
@@ -412,8 +419,12 @@ class NNDiagram extends HTMLElement {
             (isRightEdge && !fadeRight);
           const vLineW = isHardEdgeV ? 6 : THIN;
           const vStroke = isHardEdgeV ? '#000' : COL.grid;
-          const vx = isHardEdgeV ? (isLeftEdge ? x - vLineW / 2 : x + vLineW / 2) : x;
-          const vLine = `<line x1="${vx}" y1="${y1}" x2="${vx}" y2="${y2}" stroke="${vStroke}" stroke-width="${vLineW}"/>`;
+          const hardOffsetV = vLineW / 2 - THICK / 2;
+          const vx = isHardEdgeV ? (isLeftEdge ? x - hardOffsetV : x + hardOffsetV) : x;
+          const vCornerExt = vLineW - THICK / 2;
+          const vy1 = (isHardEdgeV && !fadeTop    && runStart === eMinY) ? y1 - vCornerExt : y1;
+          const vy2 = (isHardEdgeV && !fadeBottom && endGy    === eMaxY) ? y2 + vCornerExt : y2;
+          const vLine = `<line x1="${vx}" y1="${vy1}" x2="${vx}" y2="${vy2}" stroke="${vStroke}" stroke-width="${vLineW}"/>`;
           if (isHardEdgeV) hardEdgeSvg += vLine; else svg += vLine;
 
           runStart = -1;
