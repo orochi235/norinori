@@ -36,6 +36,15 @@
   .axiom h2 { margin: 0; font-size: 1.15em; color: #666; }
   .axiom p { margin: 0 0 14px; }
 
+  .heuristic { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; margin-bottom: 28px; }
+  .heuristic-text { background: white; border-radius: 10px; padding: 22px 24px; box-shadow: 0 2px 8px rgba(0,0,0,.08); border-left: 5px solid #f0b429; }
+  .heuristic-text > :last-child { margin-bottom: 0; }
+  .heuristic-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
+  .heuristic-num { font-size: .75em; font-weight: 700; background: #f0b429; color: white; padding: 2px 9px; border-radius: 4px; letter-spacing: .5px; white-space: nowrap; }
+  .heuristic h2 { margin: 0; font-size: 1.15em; color: #b07d0a; position: relative; top: 2px; }
+  .heuristic p { margin: 0 0 14px; }
+  .section-header { font-size: 1.4em; color: #b07d0a; border-bottom: 3px solid #f0b429; padding-bottom: 8px; margin: 36px 0 20px; }
+
   .summary-card { background: white; border-radius: 10px; padding: 22px 24px; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-bottom: 28px; }
   .summary-card h2 { color: #1a1a6e; font-size: 1.2em; margin-top: 0; }
   .summary-card table { width: 100%; border-collapse: collapse; font-size: .88em; display: table; }
@@ -81,7 +90,7 @@
   <p>In an L-shaped 3-cell region, the cell that would complete the 2×2 square
      <strong>cannot be shaded</strong>. The region's domino must pass through the corner cell
      (since the two ends aren't adjacent), and in either orientation, that diagonal cell
-     is a neighbor of the domino — forced unshaded by Axiom 5.</p>
+     is a neighbor of the domino — forced unshaded by <a href="#axiom-5">Axiom 5</a>.</p>
   </div>
   <div class="diagrams">
     <figure><nn-diagram regions="1,1 1,2 2,2" excluded="2,1"></nn-diagram><figcaption>Diagonal cell forced unshaded</figcaption></figure>
@@ -119,29 +128,6 @@
     </nn-transition>
   </div>
 </div>
-
-<!-- ═══ LEMMA 4 ═══ -->
-<div class="lemma" id="lemma-4">
-  <div class="lemma-text">
-  <div class="lemma-header"><span class="lemma-num">LEMMA 4</span><h2>Stash</h2></div>
-  <p>In an L-tromino, if one end has all its external neighbors unshaded, it can only pair with the corner.
-     If the corner–other end domino is also ruled out, then <strong>the surrounded end and the corner
-     are shaded</strong>, and the other end is unshaded.</p>
-  <div class="corollary">
-    ⟹ Tip: this may not be the only valid solution, but it is guaranteed to be the lowest-impact
-    way to satisfy the cell's requirements.
-  </div>
-  </div>
-  <div class="diagrams">
-    <nn-transition before-caption="One end's 3 external neighbors all unshaded" after-caption="Corner–other end ruled out: surrounded end + corner shaded">
-      <nn-diagram slot="before" regions="2,2 3,2 3,1" excluded="2,1 1,2 2,3"></nn-diagram>
-      <nn-diagram slot="after" regions="2,2 3,2 3,1" excluded="2,1 1,2 2,3 3,1" shaded="2,2 3,2"></nn-diagram>
-    </nn-transition>
-  </div>
-</div>
-
-
-
 
 
 
@@ -212,10 +198,10 @@
   <div class="lemma-text">
   <div class="lemma-header"><span class="lemma-num">LEMMA 7b</span><h2>Staircase</h2></div>
   <p>When an L-tromino sits on top of a straight 3-cell region, the solution is fully determined.
-     The L-tromino's corner excludes the cell below it (Lemma 2 + Axiom 5), which forces the straight region's
+     The L-tromino's corner excludes the cell below it (<a href="#lemma-2">Lemma 2</a> + <a href="#axiom-5">Axiom 5</a>), which forces the straight region's
      domino to the far end. That in turn excludes the L-tromino's inner end, locking in its domino.</p>
   <div class="corollary">
-    ⟹ Corollary of Lemma 2, Axiom 3, and Axiom 5.
+    ⟹ Corollary of <a href="#lemma-2">Lemma 2</a>, <a href="#axiom-3">Axiom 3</a>, and <a href="#axiom-5">Axiom 5</a>.
   </div>
   </div>
   <div class="diagrams">
@@ -232,7 +218,7 @@
   <div class="lemma-header"><span class="lemma-num">LEMMA 8</span><h2>Compass</h2></div>
   <p>If a shaded cell has two <strong>consecutive</strong> cardinal neighbors unshaded (e.g. north and east),
      it must pair with one of the other two. In both cases, the diagonal cell opposite the unshaded pair
-     is <strong>forced unshaded</strong> by Axiom 5.</p>
+     is <strong>forced unshaded</strong> by <a href="#axiom-5">Axiom 5</a>.</p>
   <div class="corollary">
     ⟹ (N,E) unshaded → SW unshaded. Same for the other three rotations.
   </div>
@@ -242,6 +228,79 @@
       <nn-diagram slot="before" shaded="2,2" excluded="2,1 3,2" unknown="1,2 2,3" extents="1,1:3,3"></nn-diagram>
       <nn-diagram slot="after" shaded="2,2" excluded="2,1 3,2 1,3" unknown="1,2 2,3" extents="1,1:3,3"></nn-diagram>
     </nn-transition>
+  </div>
+</div>
+
+<!-- ═══ LEMMA 9 ═══ -->
+<div class="lemma" id="lemma-9">
+  <div class="lemma-text">
+  <div class="lemma-header"><span class="lemma-num">LEMMA 9</span><h2>Containment</h2></div>
+  <p>If a region has no cells shaded yet, and at most <strong>one</strong> of its border cells could
+     plausibly form a cross-region domino, then the region's domino <strong>must be self-contained</strong>.</p>
+  <div class="corollary">
+    ⟹ A region needs exactly one domino. If only one cell can possibly cross out, that single
+    crossing would have to account for both shaded cells — impossible. So the domino lives entirely inside.
+  </div>
+  </div>
+</div>
+
+<!-- ═══ HEURISTICS ═══ -->
+<h2 class="section-header" id="heuristics">Heuristics</h2>
+<p style="margin-top:-8px;margin-bottom:20px;color:#666;font-size:.92em;">Pragmatic techniques that may not fully determine a cell, but find a configuration that is consistent with the rules and minimizes constraints on the rest of the grid.</p>
+
+<!-- ═══ HEURISTIC 1 ═══ -->
+<div class="heuristic" id="heuristic-stash">
+  <div class="heuristic-text">
+  <div class="heuristic-header"><span class="heuristic-num">HEURISTIC</span><h2>Stash</h2></div>
+  <p>In an L-tromino, if one end has all its external neighbors unshaded, it can only pair with the corner.
+     If the corner–other end domino is also ruled out, then <strong>the surrounded end and the corner
+     are shaded</strong>, and the other end is unshaded.</p>
+  <div class="corollary">
+    ⟹ Tip: this may not be the only valid solution, but it is guaranteed to be the lowest-impact
+    way to satisfy the cell's requirements.
+  </div>
+  </div>
+  <div class="diagrams">
+    <nn-transition before-caption="One end's 3 external neighbors all unshaded" after-caption="Corner–other end ruled out: surrounded end + corner shaded">
+      <nn-diagram slot="before" regions="2,2 3,2 3,1" excluded="2,1 1,2 2,3"></nn-diagram>
+      <nn-diagram slot="after" regions="2,2 3,2 3,1" excluded="2,1 1,2 2,3 3,1" shaded="2,2 3,2"></nn-diagram>
+    </nn-transition>
+  </div>
+</div>
+
+<!-- ═══ HEURISTIC: BANISH ═══ -->
+<div class="heuristic" id="heuristic-banish">
+  <div class="heuristic-text">
+  <div class="heuristic-header"><span class="heuristic-num">HEURISTIC</span><h2>Banish</h2></div>
+  <p>A larger-scale cousin of <a href="#heuristic-stash">Stash</a>. When two incomplete neighboring regions can only be satisfied
+     by a single shared cross-region domino, and that domino has multiple valid positions along
+     their shared border, place it in the position <strong>furthest from the rest of the action</strong> —
+     wherever it constrains the fewest other cells.</p>
+  <div class="corollary">
+    ⟹ Like <a href="#heuristic-stash">Stash</a>, this isn't the only valid placement, but it's the one most likely to leave
+    the rest of the puzzle unobstructed.
+  </div>
+  </div>
+  <div class="diagrams">
+    <figure><nn-diagram continue="bottom left right"
+      regions="1,1 1,2 1,3 | 2,1 3,1 4,1 3,2 4,2 4,3 5,3 5,4 4,5 5,5 | 5,1 6,1 5,2 6,2 6,3 | 2,2 2,3 3,3 | 1,4 1,5 2,5 3,5 1,6 3,6 | 2,4 3,4 4,4 | 6,4 7,4 7,5 7,6 | 6,5 4,6 5,6 6,6 | 2,6 | 7,3 | 7,1 7,2"
+      shaded="1,1 7,1 2,2 2,3 6,3 3,4 4,4 1,5 2,5"
+      excluded="2,1 6,1 1,2 3,2 6,2 1,3 3,3 4,3 1,4 2,4 5,4 4,5 5,5 1,6 2,6 3,6 4,6 6,6"
+      viewport="1,1:7,4"
+      ></nn-diagram><figcaption>Fragment: shared domino has multiple valid positions — pick the most isolated</figcaption></figure>
+  </div>
+</div>
+
+<!-- ═══ HEURISTIC 2 ═══ -->
+<div class="heuristic" id="heuristic-2of3">
+  <div class="heuristic-text">
+  <div class="heuristic-header"><span class="heuristic-num">HEURISTIC</span><h2>Churchillian democracy</h2></div>
+  <p>When a region has three candidate cells for its domino and it's not clear which pair is correct,
+     tentatively assume one of the three pairings. If this leads to a contradiction elsewhere on the board,
+     that pairing is ruled out — repeat with the next pairing until only one remains.</p>
+  <div class="corollary">
+    ⟹ Use when direct deduction stalls and a region has a small, enumerable set of possibilities.
+  </div>
   </div>
 </div>
 
@@ -402,12 +461,16 @@
       <tr><td><b>1</b></td><td>Forlorn quarter</td><td>Cell completing the 2×2 square around an L-tromino is unshaded</td></tr>
       <tr><td><b>2</b></td><td>Corner lock</td><td>L-tromino corner cell always pairs internally; cannot cross regions</td></tr>
       <tr><td><b>3</b></td><td>Elbow</td><td>Cell past one end unshaded ⟹ cell past corner also unshaded</td></tr>
-      <tr><td><b>4</b></td><td>Stash</td><td>Surrounded end + corner shaded; other end unshaded</td></tr>
       <tr><td><b>5</b></td><td>Brainstem</td><td>The extra "brainstem" cell must be shaded</td></tr>
       <tr><td><b>6</b></td><td>Clasp</td><td>Centers unshaded; outer columns form cross-region dominoes</td></tr>
       <tr><td><b>7</b></td><td>Friction</td><td>Non-adjacent cell in each region must be shaded</td></tr>
       <tr><td><b>7b</b></td><td>Staircase</td><td>L-tromino over a straight 3-cell: both regions fully determined</td></tr>
       <tr><td><b>8</b></td><td>Compass</td><td>The diagonal not touching either unshaded cell is also unshaded</td></tr>
+      <tr><td><b>9</b></td><td>Containment</td><td>Region with ≤1 possible cross-border cell must contain its domino entirely</td></tr>
+      <tr><td colspan="3" style="background:#fdf3d8;font-weight:700;font-size:.9em;padding:6px 12px;color:#b07d0a;">Heuristics</td></tr>
+      <tr><td><b>H</b></td><td>Stash</td><td>Surrounded end + corner shaded; other end unshaded (lowest-impact)</td></tr>
+      <tr><td><b>H</b></td><td>Banish</td><td>Place a forced shared cross-region domino in the most out-of-the-way valid position</td></tr>
+      <tr><td><b>H</b></td><td>Churchillian democracy</td><td>Try each candidate pairing; eliminate any that leads to contradiction</td></tr>
     </tbody>
   </table>
 </div>

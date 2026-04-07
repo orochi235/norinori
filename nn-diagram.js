@@ -1,6 +1,6 @@
 class NNDiagram extends HTMLElement {
   static get observedAttributes() {
-    return ['regions', 'shaded', 'excluded', 'unknown', 'ish', 'labels', 'baseline', 'checkerboard', 'extents', 'continue', 'show-errors'];
+    return ['regions', 'shaded', 'excluded', 'unknown', 'ish', 'labels', 'baseline', 'checkerboard', 'extents', 'viewport', 'continue', 'show-errors'];
   }
 
   constructor() {
@@ -139,6 +139,81 @@ class NNDiagram extends HTMLElement {
       minY = Math.min(minY, a.y); maxY = Math.max(maxY, b.y);
     }
 
+    // Viewport: clip rendering to a subrectangle of the puzzle.
+    // Cells and region data outside the viewport are still used for
+    // determining region topology, but are not rendered.
+    const viewportAttr = this.getAttribute('viewport');
+    let viewport = null;
+    if (viewportAttr) {
+      const [from, to] = viewportAttr.split(':');
+      const a = NNDiagram.parseCoord(from);
+      const b = NNDiagram.parseCoord(to);
+      viewport = {
+        minX: Math.min(a.x, b.x), maxX: Math.max(a.x, b.x),
+        minY: Math.min(a.y, b.y), maxY: Math.max(a.y, b.y),
+      };
+      minX = viewport.minX; maxX = viewport.maxX;
+      minY = viewport.minY; maxY = viewport.maxY;
+    }
+    const inViewport = (x, y) =>
+      !viewport || (x >= viewport.minX && x <= viewport.maxX &&
+                    y >= viewport.minY && y <= viewport.maxY);
+
+    // ── Fade-strip detection ──
+    // For each clipped viewport side, if the row/column immediately beyond
+    // contains any puzzle data (region, shaded, excluded, unknown, ish, label),
+    // mark that side as a "fade side". Fade sides render a half-cell-deep
+    // strip of the adjacent content faded out toward the outer edge.
+    const fadeSides = new Set();
+    if (viewport) {
+      const hasDataAt = (x, y) => {
+        const k = NNDiagram.key(x, y);
+        if (regionOf.has(k)) return true;
+        for (const c of shadedList)   if (c.x === x && c.y === y) return true;
+        for (const c of excludedList) if (c.x === x && c.y === y) return true;
+        for (const c of unknownList)  if (c.x === x && c.y === y) return true;
+        for (const c of ishList)      if (c.x === x && c.y === y) return true;
+        if (labelMap.has(k)) return true;
+        return false;
+      };
+      const rowHasData = (y) => {
+        for (let x = viewport.minX; x <= viewport.maxX; x++)
+          if (hasDataAt(x, y)) return true;
+        return false;
+      };
+      const colHasData = (x) => {
+        for (let y = viewport.minY; y <= viewport.maxY; y++)
+          if (hasDataAt(x, y)) return true;
+        return false;
+      };
+      if (rowHasData(viewport.minY - 1)) fadeSides.add('top');
+      if (rowHasData(viewport.maxY + 1)) fadeSides.add('bottom');
+      if (colHasData(viewport.minX - 1)) fadeSides.add('left');
+      if (colHasData(viewport.maxX + 1)) fadeSides.add('right');
+    }
+
+    // Continue/stub sides become empty fade strips on any side that isn't
+    // already a viewport fade side. They extend the rendered area by a half
+    // cell with gridlines and cell backgrounds (no region/marker data) and
+    // are faded by the same gradient mask.
+    for (const side of ['top', 'bottom', 'left', 'right']) {
+      if (stubSides.has(side) && !fadeSides.has(side)) fadeSides.add(side);
+    }
+
+    // Effective bounds: extend by 1 on each fade side. The ring cells on
+    // fade sides become "content" for rendering purposes.
+    const eMinX = minX - (fadeSides.has('left')   ? 1 : 0);
+    const eMaxX = maxX + (fadeSides.has('right')  ? 1 : 0);
+    const eMinY = minY - (fadeSides.has('top')    ? 1 : 0);
+    const eMaxY = maxY + (fadeSides.has('bottom') ? 1 : 0);
+    const inFadeStrip = (x, y) =>
+      (fadeSides.has('top')    && y === minY - 1 && x >= eMinX && x <= eMaxX) ||
+      (fadeSides.has('bottom') && y === maxY + 1 && x >= eMinX && x <= eMaxX) ||
+      (fadeSides.has('left')   && x === minX - 1 && y >= eMinY && y <= eMaxY) ||
+      (fadeSides.has('right')  && x === maxX + 1 && y >= eMinY && y <= eMaxY);
+    const inExtViewport = (x, y) =>
+      !viewport || (x >= eMinX && x <= eMaxX && y >= eMinY && y <= eMaxY);
+
     const pMinX = minX - 1, pMaxX = maxX + 1;
     const pMinY = minY - 1, pMaxY = maxY + 1;
     const contentCols = maxX - minX + 1;
@@ -190,6 +265,8 @@ class NNDiagram extends HTMLElement {
       for (let gx = pMinX; gx <= pMaxX; gx++) {
         const k = NNDiagram.key(gx, gy);
         const inBBox = gx >= minX && gx <= maxX && gy >= minY && gy <= maxY;
+        const inStrip = inFadeStrip(gx, gy);
+        const renderCell = inBBox || inStrip;
         const state = stateMap.get(k);
         const px = cellX(gx);
         const py = cellY(gy);
@@ -197,7 +274,7 @@ class NNDiagram extends HTMLElement {
         const ch = cellH(gy);
 
         const isDark = (gx + gy) % 2 === 0;
-        const cellBg = (checkerboard && inBBox) ? (isDark ? COL.checker : COL.cell) : (inBBox ? COL.cell : 'transparent');
+        const cellBg = (checkerboard && renderCell) ? (isDark ? COL.checker : COL.cell) : (renderCell ? COL.cell : 'transparent');
 
         // Check if this cell's region has an error (shaded count ≠ 2)
         const ri = regionOf.get(k);
@@ -262,45 +339,49 @@ class NNDiagram extends HTMLElement {
     }
 
     // ── Gridlines with fading stubs ──
-    // All cells in the bounding box are "content" for gridline purposes.
-    const isContent = (gx, gy) => gx >= minX && gx <= maxX && gy >= minY && gy <= maxY;
+    // All cells in the (effective) bounding box are "content" for gridline
+    // purposes. Effective bounds extend by 1 on fade sides so the strip
+    // gets gridlines too.
+    const isContent = (gx, gy) => gx >= eMinX && gx <= eMaxX && gy >= eMinY && gy <= eMaxY;
 
-    // Helper: draw a fading stub as a few short segments with decreasing opacity
-    const STUB_LEN = HC;
-    const STUB_SEGS = 4;
-    const stubSegLen = STUB_LEN / STUB_SEGS;
-    function drawStub(x1, y1, dx, dy) {
-      let s = '';
-      for (let i = 0; i < STUB_SEGS; i++) {
-        const opacity = 1 - (i + 0.5) / STUB_SEGS;
-        const sx = x1 + dx * stubSegLen * i;
-        const sy = y1 + dy * stubSegLen * i;
-        s += `<line x1="${sx}" y1="${sy}" x2="${sx + dx * stubSegLen}" y2="${sy + dy * stubSegLen}" stroke="${COL.grid}" stroke-width="${THIN}" opacity="${opacity.toFixed(2)}"/>`;
-      }
-      return s;
-    }
+    let hardEdgeSvg = '';
+
+    const fadeTop    = fadeSides.has('top');
+    const fadeBottom = fadeSides.has('bottom');
+    const fadeLeft   = fadeSides.has('left');
+    const fadeRight  = fadeSides.has('right');
 
     // Draw horizontal gridlines.
-    for (let gy = minY; gy <= maxY + 1; gy++) {
+    for (let gy = eMinY; gy <= eMaxY + 1; gy++) {
+      // Skip the outermost gridline on fade sides — the strip should fade
+      // to nothing, not end with a boundary line.
+      if (fadeTop && gy === eMinY) continue;
+      if (fadeBottom && gy === eMaxY + 1) continue;
       let runStart = -1;
-      for (let gx = minX; gx <= maxX; gx++) {
-        const above = gy > minY ? isContent(gx, gy - 1) : false;
-        const below = gy <= maxY ? isContent(gx, gy) : false;
+      for (let gx = eMinX; gx <= eMaxX; gx++) {
+        const above = gy > eMinY ? isContent(gx, gy - 1) : false;
+        const below = gy <= eMaxY ? isContent(gx, gy) : false;
         const active = above || below;
 
         if (active && runStart === -1) runStart = gx;
-        if ((!active || gx === maxX) && runStart !== -1) {
+        if ((!active || gx === eMaxX) && runStart !== -1) {
           const endGx = active ? gx : gx - 1;
           const x1 = cellX(runStart);
           const x2 = cellX(endGx) + cellW(endGx);
-          const y = (gy <= maxY) ? cellY(gy) : cellY(maxY) + cellH(maxY);
+          const y = (gy <= eMaxY) ? cellY(gy) : cellY(eMaxY) + cellH(eMaxY);
 
-          const isTopEdge = (gy === minY);
-          const isBottomEdge = (gy === maxY + 1);
-          const hLineW = ((isTopEdge && !stubSides.has('top')) || (isBottomEdge && !stubSides.has('bottom'))) ? THIN * 2 : THIN;
-          svg += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${COL.grid}" stroke-width="${hLineW}"/>`;
-          if (stubSides.has('left'))  svg += drawStub(x1, y, -1, 0); // left stub
-          if (stubSides.has('right')) svg += drawStub(x2, y, 1, 0);  // right stub
+          const isTopEdge = (gy === eMinY);
+          const isBottomEdge = (gy === eMaxY + 1);
+          const isHardEdge =
+            (isTopEdge    && !fadeTop) ||
+            (isBottomEdge && !fadeBottom);
+          const hLineW = isHardEdge ? 6 : THIN;
+          const hStroke = isHardEdge ? '#000' : COL.grid;
+          // Offset hard edges outward by half stroke width so the cell
+          // doesn't appear clipped by the thick puzzle border.
+          const hy = isHardEdge ? (isTopEdge ? y - hLineW / 2 : y + hLineW / 2) : y;
+          const hLine = `<line x1="${x1}" y1="${hy}" x2="${x2}" y2="${hy}" stroke="${hStroke}" stroke-width="${hLineW}"/>`;
+          if (isHardEdge) hardEdgeSvg += hLine; else svg += hLine;
 
           runStart = -1;
         }
@@ -308,26 +389,32 @@ class NNDiagram extends HTMLElement {
     }
 
     // Draw vertical gridlines.
-    for (let gx = minX; gx <= maxX + 1; gx++) {
+    for (let gx = eMinX; gx <= eMaxX + 1; gx++) {
+      if (fadeLeft && gx === eMinX) continue;
+      if (fadeRight && gx === eMaxX + 1) continue;
       let runStart = -1;
-      for (let gy = minY; gy <= maxY; gy++) {
-        const left = gx > minX ? isContent(gx - 1, gy) : false;
-        const right = gx <= maxX ? isContent(gx, gy) : false;
+      for (let gy = eMinY; gy <= eMaxY; gy++) {
+        const left = gx > eMinX ? isContent(gx - 1, gy) : false;
+        const right = gx <= eMaxX ? isContent(gx, gy) : false;
         const active = left || right;
 
         if (active && runStart === -1) runStart = gy;
-        if ((!active || gy === maxY) && runStart !== -1) {
+        if ((!active || gy === eMaxY) && runStart !== -1) {
           const endGy = active ? gy : gy - 1;
           const y1 = cellY(runStart);
           const y2 = cellY(endGy) + cellH(endGy);
-          const x = (gx <= maxX) ? cellX(gx) : cellX(maxX) + cellW(maxX);
+          const x = (gx <= eMaxX) ? cellX(gx) : cellX(eMaxX) + cellW(eMaxX);
 
-          const isLeftEdge = (gx === minX);
-          const isRightEdge = (gx === maxX + 1);
-          const vLineW = ((isLeftEdge && !stubSides.has('left')) || (isRightEdge && !stubSides.has('right'))) ? THIN * 2 : THIN;
-          svg += `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${COL.grid}" stroke-width="${vLineW}"/>`;
-          if (stubSides.has('top'))    svg += drawStub(x, y1, 0, -1); // top stub
-          if (stubSides.has('bottom')) svg += drawStub(x, y2, 0, 1);  // bottom stub
+          const isLeftEdge = (gx === eMinX);
+          const isRightEdge = (gx === eMaxX + 1);
+          const isHardEdgeV =
+            (isLeftEdge  && !fadeLeft) ||
+            (isRightEdge && !fadeRight);
+          const vLineW = isHardEdgeV ? 6 : THIN;
+          const vStroke = isHardEdgeV ? '#000' : COL.grid;
+          const vx = isHardEdgeV ? (isLeftEdge ? x - vLineW / 2 : x + vLineW / 2) : x;
+          const vLine = `<line x1="${vx}" y1="${y1}" x2="${vx}" y2="${y2}" stroke="${vStroke}" stroke-width="${vLineW}"/>`;
+          if (isHardEdgeV) hardEdgeSvg += vLine; else svg += vLine;
 
           runStart = -1;
         }
@@ -342,14 +429,23 @@ class NNDiagram extends HTMLElement {
       svg += `<path d="${buildMergedPath(comp)}" fill="${COL.ish}" style="mix-blend-mode:multiply" fill-rule="nonzero"/>`;
     }
 
-    // ── Cell content (text) — only for full-size content cells ──
-    for (let gy = minY; gy <= maxY; gy++) {
-      for (let gx = minX; gx <= maxX; gx++) {
+    // ── Cell content (text) — content cells plus fade-strip ring cells ──
+    for (let gy = pMinY; gy <= pMaxY; gy++) {
+      for (let gx = pMinX; gx <= pMaxX; gx++) {
+        const inBBox = gx >= minX && gx <= maxX && gy >= minY && gy <= maxY;
+        if (!inBBox && !inFadeStrip(gx, gy)) continue;
         const k = NNDiagram.key(gx, gy);
         const state = stateMap.get(k);
         const label = labelMap.get(k);
-        const cx = cellX(gx) + C / 2;
-        const cy = cellY(gy) + C / 2;
+        // Center text where it would be in a full-size cell, even in
+        // half-size fade-strip ring cells. The mask fades the half that
+        // lies outside the viewport.
+        const cx = (gx < minX) ? cellX(gx) + HC - C/2
+                : (gx > maxX) ? cellX(gx) + C/2
+                              : cellX(gx) + C/2;
+        const cy = (gy < minY) ? cellY(gy) + HC - C/2
+                : (gy > maxY) ? cellY(gy) + C/2
+                              : cellY(gy) + C/2;
 
         let text = '';
         let fill = '';
@@ -361,9 +457,12 @@ class NNDiagram extends HTMLElement {
           fill = (state === 'shaded' || state === 'ish') ? COL.cell : COL.label;
           fontSize = Math.round(C * 0.36);
         } else if (state === 'excluded') {
-          text = '\u2715';
-          fill = COL.excluded;
-          fontSize = Math.round(C * 0.42);
+          // Draw the X as two SVG lines for crisp control over size & weight.
+          const r = C * 0.18;
+          const sw = Math.max(2, Math.round(C * 0.09));
+          svg += `<line x1="${cx - r}" y1="${cy - r}" x2="${cx + r}" y2="${cy + r}" stroke="${COL.excluded}" stroke-width="${sw}"/>`;
+          svg += `<line x1="${cx - r}" y1="${cy + r}" x2="${cx + r}" y2="${cy - r}" stroke="${COL.excluded}" stroke-width="${sw}"/>`;
+          continue;
         } else if (state === 'unknown') {
           text = '?';
           fill = COL.unknown;
@@ -389,23 +488,33 @@ class NNDiagram extends HTMLElement {
       // We store edges as grid-corner coordinates: each cell (gx,gy) occupies
       // corners (gx,gy)-(gx+1,gy+1) in corner-space.
       const edges = [];
+      // Skip an edge that lies entirely on a fade-side's outer clip line —
+      // it's a spurious seam introduced by clamping the region trace to the
+      // extended-viewport bounds, not a real region border.
+      const fT2 = fadeSides.has('top'), fB2 = fadeSides.has('bottom');
+      const fL2 = fadeSides.has('left'), fR2 = fadeSides.has('right');
+      const skipClipEdge = (e) =>
+        (fB2 && e.y1 > eMaxY && e.y2 > eMaxY) ||
+        (fT2 && e.y1 <= eMinY && e.y2 <= eMinY) ||
+        (fR2 && e.x1 > eMaxX && e.x2 > eMaxX) ||
+        (fL2 && e.x1 <= eMinX && e.x2 <= eMinX);
+      const pushEdge = (e) => { if (!skipClipEdge(e)) edges.push(e); };
       for (const c of regionCells) {
         const { x: gx, y: gy } = c;
-        // Top edge: if cell above is not in region
+        // Skip cells entirely outside the extended viewport — their edges
+        // would be clamped to the clip boundary and create spurious seams.
+        if (viewport && !inExtViewport(gx, gy)) continue;
         if (!cellSet.has(NNDiagram.key(gx, gy - 1))) {
-          edges.push({ x1: gx, y1: gy, x2: gx + 1, y2: gy }); // left to right
+          pushEdge({ x1: gx, y1: gy, x2: gx + 1, y2: gy });
         }
-        // Bottom edge
         if (!cellSet.has(NNDiagram.key(gx, gy + 1))) {
-          edges.push({ x1: gx + 1, y1: gy + 1, x2: gx, y2: gy + 1 }); // right to left
+          pushEdge({ x1: gx + 1, y1: gy + 1, x2: gx, y2: gy + 1 });
         }
-        // Left edge
         if (!cellSet.has(NNDiagram.key(gx - 1, gy))) {
-          edges.push({ x1: gx, y1: gy + 1, x2: gx, y2: gy }); // bottom to top
+          pushEdge({ x1: gx, y1: gy + 1, x2: gx, y2: gy });
         }
-        // Right edge
         if (!cellSet.has(NNDiagram.key(gx + 1, gy))) {
-          edges.push({ x1: gx + 1, y1: gy, x2: gx + 1, y2: gy + 1 }); // top to bottom
+          pushEdge({ x1: gx + 1, y1: gy, x2: gx + 1, y2: gy + 1 });
         }
       }
 
@@ -456,15 +565,17 @@ class NNDiagram extends HTMLElement {
 
       // Simpler corner mapping: corner (cx, cy) is at the top-left of cell (cx, cy)
       function ctp(cx, cy) {
-        // x position
+        // Clamp to the extended viewport (viewport + fade-strip ring) so that
+        // region borders extending into the fade strip get real coordinates
+        // and are masked out smoothly, instead of being clamped to the
+        // viewport edge (which would draw a spurious closing line).
         let px;
-        if (cx <= minX) px = cellX(minX);
-        else if (cx > maxX) px = cellX(maxX) + cellW(maxX);
+        if (cx <= eMinX) px = cellX(eMinX);
+        else if (cx > eMaxX) px = cellX(eMaxX) + cellW(eMaxX);
         else px = cellX(cx);
-        // y position
         let py;
-        if (cy <= minY) py = cellY(minY);
-        else if (cy > maxY) py = cellY(maxY) + cellH(maxY);
+        if (cy <= eMinY) py = cellY(eMinY);
+        else if (cy > eMaxY) py = cellY(eMaxY) + cellH(eMaxY);
         else py = cellY(cy);
         return { px, py };
       }
@@ -477,7 +588,11 @@ class NNDiagram extends HTMLElement {
           const end = ctp(seg.x2, seg.y2);
           d += `L${end.px},${end.py}`;
         }
-        d += 'Z ';
+        // Only close the path if the loop actually returns to its start
+        // (open chains occur when viewport clipping cuts a region).
+        const last = loop[loop.length - 1];
+        if (last.x2 === loop[0].x1 && last.y2 === loop[0].y1) d += 'Z ';
+        d += ' ';
       }
 
       return d;
@@ -497,7 +612,80 @@ class NNDiagram extends HTMLElement {
       svg += `<path d="${d}" fill="none" stroke="${strokeCol}" stroke-width="${THICK}" stroke-linejoin="round"/>`;
     }
 
-    const fullSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">${svg}</svg>`;
+    svg += hardEdgeSvg;
+
+    // ── Fade-strip mask ──
+    // Cover the whole SVG with white (visible), then overlay each fade-side
+    // strip with a linear gradient that fades to black at the outer edge.
+    let defsContent = '';
+    let body = svg;
+    if (fadeSides.size > 0) {
+      const uid = 'nnfm' + Math.random().toString(36).slice(2, 9);
+      // Strip pixel ranges (the strip is exactly the half-cell padding ring
+      // immediately outside the viewport).
+      const innerLeft   = cellX(minX);
+      const innerRight  = cellX(maxX) + cellW(maxX);
+      const innerTop    = cellY(minY);
+      const innerBottom = cellY(maxY) + cellH(maxY);
+
+      const fT = fadeSides.has('top');
+      const fB = fadeSides.has('bottom');
+      const fL = fadeSides.has('left');
+      const fR = fadeSides.has('right');
+
+      let gradients = '';
+      let maskRects = `<rect x="0" y="0" width="${svgW}" height="${svgH}" fill="white"/>`;
+      // Black-out everything beyond each fade strip's outer edge so that
+      // text glyphs and stray geometry don't leak into the unmasked area.
+      if (fT) maskRects += `<rect x="0" y="0" width="${svgW}" height="${innerTop - HC}" fill="black"/>`;
+      if (fB) maskRects += `<rect x="0" y="${innerBottom + HC}" width="${svgW}" height="${svgH - (innerBottom + HC)}" fill="black"/>`;
+      if (fL) maskRects += `<rect x="0" y="0" width="${innerLeft - HC}" height="${svgH}" fill="black"/>`;
+      if (fR) maskRects += `<rect x="${innerRight + HC}" y="0" width="${svgW - (innerRight + HC)}" height="${svgH}" fill="black"/>`;
+      // Side strips are clipped horizontally/vertically to the inner span,
+      // so corners are handled separately with a radial gradient.
+      // A side strip extends into an adjacent corner only if the perpendicular
+      // side is NOT itself a fade side. (When two fade sides meet, the corner
+      // is handled separately by a radial gradient.)
+      if (fT) {
+        const x0 = fL ? innerLeft  : innerLeft  - HC;
+        const x1 = fR ? innerRight : innerRight + HC;
+        gradients += `<linearGradient id="${uid}t" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient>`;
+        maskRects += `<rect x="${x0}" y="${innerTop - HC}" width="${x1 - x0}" height="${HC}" fill="url(#${uid}t)"/>`;
+      }
+      if (fB) {
+        const x0 = fL ? innerLeft  : innerLeft  - HC;
+        const x1 = fR ? innerRight : innerRight + HC;
+        gradients += `<linearGradient id="${uid}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient>`;
+        maskRects += `<rect x="${x0}" y="${innerBottom}" width="${x1 - x0}" height="${HC}" fill="url(#${uid}b)"/>`;
+      }
+      if (fL) {
+        const y0 = fT ? innerTop    : innerTop    - HC;
+        const y1 = fB ? innerBottom : innerBottom + HC;
+        gradients += `<linearGradient id="${uid}l" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient>`;
+        maskRects += `<rect x="${innerLeft - HC}" y="${y0}" width="${HC}" height="${y1 - y0}" fill="url(#${uid}l)"/>`;
+      }
+      if (fR) {
+        const y0 = fT ? innerTop    : innerTop    - HC;
+        const y1 = fB ? innerBottom : innerBottom + HC;
+        gradients += `<linearGradient id="${uid}r" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient>`;
+        maskRects += `<rect x="${innerRight}" y="${y0}" width="${HC}" height="${y1 - y0}" fill="url(#${uid}r)"/>`;
+      }
+      // Corner pieces: a radial gradient centered at the inner corner.
+      // Used wherever two adjacent fade sides meet, so the fade is smooth
+      // and rotationally symmetric in the corner.
+      const corner = (id, cx, cy, x, y) => {
+        gradients += `<radialGradient id="${id}" cx="${cx}" cy="${cy}" r="${HC}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="white"/><stop offset="1" stop-color="black"/></radialGradient>`;
+        maskRects += `<rect x="${x}" y="${y}" width="${HC}" height="${HC}" fill="url(#${id})"/>`;
+      };
+      if (fT && fL) corner(`${uid}tl`, innerLeft,  innerTop,    innerLeft - HC,  innerTop - HC);
+      if (fT && fR) corner(`${uid}tr`, innerRight, innerTop,    innerRight,      innerTop - HC);
+      if (fB && fL) corner(`${uid}bl`, innerLeft,  innerBottom, innerLeft - HC,  innerBottom);
+      if (fB && fR) corner(`${uid}br`, innerRight, innerBottom, innerRight,      innerBottom);
+      defsContent = `<defs>${gradients}<mask id="${uid}m" maskUnits="userSpaceOnUse">${maskRects}</mask></defs>`;
+      body = `<g mask="url(#${uid}m)">${svg}</g>`;
+    }
+
+    const fullSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">${defsContent}${body}</svg>`;
 
     // ── Baseline alignment ──
     // If baseline attribute is set, offset so that row's center is at
