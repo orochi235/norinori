@@ -90,7 +90,7 @@ class NNDiagram extends HTMLElement {
       excluded: cssVar('--nn-excluded', '#c00'),
       unknown:  cssVar('--nn-unknown', '#bbb'),
       label:    cssVar('--nn-label', '#444'),
-      grid:     cssVar('--nn-grid', '#999'),
+      grid:     cssVar('--nn-grid', '#ccc'),
       region:   cssVar('--nn-region-border', '#000'),
       cell:     cssVar('--nn-cell-bg', '#fff'),
       caption:  cssVar('--nn-caption', '#666'),
