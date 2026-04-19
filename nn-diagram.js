@@ -1,6 +1,6 @@
 class NNDiagram extends HTMLElement {
   static get observedAttributes() {
-    return ['regions', 'shaded', 'excluded', 'unknown', 'ish', 'labels', 'baseline', 'checkerboard', 'extents', 'viewport', 'continue', 'show-errors'];
+    return ['regions', 'shaded', 'excluded', 'unknown', 'ish', 'putative', 'labels', 'baseline', 'checkerboard', 'extents', 'viewport', 'continue', 'show-errors'];
   }
 
   constructor() {
@@ -70,6 +70,7 @@ class NNDiagram extends HTMLElement {
     const excludedList = NNDiagram.parseCoordList(this.getAttribute('excluded'));
     const unknownList = NNDiagram.parseCoordList(this.getAttribute('unknown'));
     const ishList = NNDiagram.parseCoordList(this.getAttribute('ish'));
+    const putativeList = NNDiagram.parseCoordList(this.getAttribute('putative'));
     const labelMap = NNDiagram.parseLabelList(this.getAttribute('labels'));
     const stubSides = NNDiagram.parseStubs(this.getAttribute('continue'));
 
@@ -94,6 +95,7 @@ class NNDiagram extends HTMLElement {
       region:   cssVar('--nn-region-border', '#000'),
       cell:     cssVar('--nn-cell-bg', '#fff'),
       caption:  cssVar('--nn-caption', '#666'),
+      putative: cssVar('--nn-putative', 'fuchsia'),
       checker:  cssVar('--nn-checker', '#c0c0c0'),
       error:    cssVar('--nn-error', '#e03030'),
     };
@@ -113,7 +115,7 @@ class NNDiagram extends HTMLElement {
     });
 
     const allCells = [
-      ...shadedList, ...excludedList, ...unknownList, ...ishList,
+      ...shadedList, ...excludedList, ...unknownList, ...ishList, ...putativeList,
       ...regions.flat(),
       ...[...labelMap.keys()].map(NNDiagram.parseCoord)
     ];
@@ -173,6 +175,7 @@ class NNDiagram extends HTMLElement {
         for (const c of excludedList) if (c.x === x && c.y === y) return true;
         for (const c of unknownList)  if (c.x === x && c.y === y) return true;
         for (const c of ishList)      if (c.x === x && c.y === y) return true;
+        for (const c of putativeList) if (c.x === x && c.y === y) return true;
         if (labelMap.has(k)) return true;
         return false;
       };
@@ -224,6 +227,7 @@ class NNDiagram extends HTMLElement {
     for (const c of excludedList) stateMap.set(NNDiagram.key(c.x, c.y), 'excluded');
     for (const c of unknownList) stateMap.set(NNDiagram.key(c.x, c.y), 'unknown');
     for (const c of ishList) stateMap.set(NNDiagram.key(c.x, c.y), 'ish');
+    for (const c of putativeList) stateMap.set(NNDiagram.key(c.x, c.y), 'putative');
 
     // ── Count shaded cells per region for error highlighting ──
     const shadedPerRegion = new Map();
@@ -259,6 +263,7 @@ class NNDiagram extends HTMLElement {
     const cellH = (gy) => (gy < minY || gy > maxY) ? HC : C;
 
     let svg = '';
+    let putativeDefs = '';
 
     // ── Cell backgrounds (non-shaded only) ──
     for (let gy = pMinY; gy <= pMaxY; gy++) {
@@ -438,6 +443,19 @@ class NNDiagram extends HTMLElement {
     }
     for (const comp of ishShapes) {
       svg += `<path d="${buildMergedPath(comp)}" fill="${COL.ish}" style="mix-blend-mode:multiply" fill-rule="nonzero"/>`;
+    }
+
+    // ── Putative overlays (diagonal hatch lines NW→SE) ──
+    const putativeShapes = findConnectedComponents(putativeList);
+    if (putativeShapes.length > 0) {
+      const patId = 'nnput' + Math.random().toString(36).slice(2, 9);
+      // 50% concentration: line width ≈ half the spacing
+      const gap = Math.round(C * 0.08);
+      const sw = gap;
+      putativeDefs = `<pattern id="${patId}" width="${gap * 2}" height="${gap * 2}" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="${gap * 2}" stroke="${COL.putative}" stroke-width="${sw}"/></pattern>`;
+      for (const comp of putativeShapes) {
+        svg += `<path d="${buildMergedPath(comp)}" fill="url(#${patId})" fill-rule="nonzero"/>`;
+      }
     }
 
     // ── Cell content (text) — content cells plus fade-strip ring cells ──
@@ -628,7 +646,7 @@ class NNDiagram extends HTMLElement {
     // ── Fade-strip mask ──
     // Cover the whole SVG with white (visible), then overlay each fade-side
     // strip with a linear gradient that fades to black at the outer edge.
-    let defsContent = '';
+    let defsContent = putativeDefs ? `<defs>${putativeDefs}</defs>` : '';
     let body = svg;
     if (fadeSides.size > 0) {
       const uid = 'nnfm' + Math.random().toString(36).slice(2, 9);
@@ -692,7 +710,7 @@ class NNDiagram extends HTMLElement {
       if (fT && fR) corner(`${uid}tr`, innerRight, innerTop,    innerRight,      innerTop - HC);
       if (fB && fL) corner(`${uid}bl`, innerLeft,  innerBottom, innerLeft - HC,  innerBottom);
       if (fB && fR) corner(`${uid}br`, innerRight, innerBottom, innerRight,      innerBottom);
-      defsContent = `<defs>${gradients}<mask id="${uid}m" maskUnits="userSpaceOnUse">${maskRects}</mask></defs>`;
+      defsContent = `<defs>${putativeDefs}${gradients}<mask id="${uid}m" maskUnits="userSpaceOnUse">${maskRects}</mask></defs>`;
       body = `<g mask="url(#${uid}m)">${svg}</g>`;
     }
 

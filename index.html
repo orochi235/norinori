@@ -118,13 +118,13 @@
   <div class="lemma-text">
   <div class="lemma-header"><span class="lemma-num">LEMMA 3</span><h2>Elbow</h2></div>
   <p>In an L-tromino, if the cell past one end is unshaded or out of bounds,
-     then the cell past the corner on the same axis is also <strong>unshaded</strong>.
+     then the cell extending the other arm past the corner is also <strong>unshaded</strong>.
      Both valid domino placements force it unshaded via domino closure.</p>
   </div>
   <div class="diagrams">
-    <nn-transition before-caption="Cell above end is unshaded" after-caption="Cell below corner also forced unshaded">
-      <nn-diagram slot="before" regions="2,2 2,3 3,3" excluded="2,1" unknown="2,4"></nn-diagram>
-      <nn-diagram slot="after" regions="2,2 2,3 3,3" excluded="2,1 2,4"></nn-diagram>
+    <nn-transition before-caption="Cell above end is unshaded" after-caption="Cell left of corner also forced unshaded">
+      <nn-diagram slot="before" regions="1,2 1,3 2,3" excluded="1,1" unknown="0,3"></nn-diagram>
+      <nn-diagram slot="after" regions="1,2 1,3 2,3" excluded="1,1 0,3"></nn-diagram>
     </nn-transition>
   </div>
 </div>
@@ -256,8 +256,7 @@
      If the corner–other end domino is also ruled out, then <strong>the surrounded end and the corner
      are shaded</strong>, and the other end is unshaded.</p>
   <div class="corollary">
-    ⟹ Tip: this may not be the only valid solution, but it is guaranteed to be the lowest-impact
-    way to satisfy the cell's requirements.
+    ⟹ Tip: this may not be the only valid solution, but it is guaranteed to have equal or less impact than the other possible internal placement.
   </div>
   </div>
   <div class="diagrams">
@@ -291,7 +290,28 @@
   </div>
 </div>
 
-<!-- ═══ HEURISTIC 2 ═══ -->
+<!-- ═══ HEURISTIC: BLOB GUARD ═══ -->
+<div class="heuristic" id="heuristic-blob-guard">
+  <div class="heuristic-text">
+  <div class="heuristic-header"><span class="heuristic-num">HEURISTIC</span><h2>Blob guard</h2></div>
+  <p>When a region has exactly <strong>three open cells and no shaded cells</strong>, consider each possible
+     pair. If shading a particular pair would create a connected blob of three or more shaded cells
+     (by merging with an already-shaded neighbor from another region), that pair is invalid.
+     The cell <strong>not</strong> in the invalid pair must be shaded.</p>
+  <div class="corollary">
+    ⟹ This is a direct consequence of the domino rule (<a href="#axiom-2">Axiom 2</a>): no shaded cell may
+    have more than one shaded neighbor, so a blob of 3+ connected shaded cells is always illegal.
+  </div>
+  </div>
+  <div class="diagrams">
+    <nn-transition before-caption="3 open cells; neighbor already shaded" after-caption="Pair B+C would form a blob → A must be shaded">
+      <nn-diagram slot="before" regions="2,1 3,1 4,1 | 5,1 5,2" unknown="2,1" putative="3,1 4,1" shaded="5,1 5,2" labels="2,1:A 3,1:B 4,1:C"></nn-diagram>
+      <nn-diagram slot="after" regions="2,1 3,1 4,1 | 5,1 5,2" shaded="2,1 5,1 5,2" putative="3,1 4,1" labels="2,1:A 3,1:B 4,1:C"></nn-diagram>
+    </nn-transition>
+  </div>
+</div>
+
+<!-- ═══ HEURISTIC: CHURCHILLIAN DEMOCRACY ═══ -->
 <div class="heuristic" id="heuristic-2of3">
   <div class="heuristic-text">
   <div class="heuristic-header"><span class="heuristic-num">HEURISTIC</span><h2>Churchillian democracy</h2></div>
@@ -470,6 +490,7 @@
       <tr><td colspan="3" style="background:#fdf3d8;font-weight:700;font-size:.9em;padding:6px 12px;color:#b07d0a;">Heuristics</td></tr>
       <tr><td><b>H</b></td><td>Stash</td><td>Surrounded end + corner shaded; other end unshaded (lowest-impact)</td></tr>
       <tr><td><b>H</b></td><td>Banish</td><td>Place a forced shared cross-region domino in the most out-of-the-way valid position</td></tr>
+      <tr><td><b>H</b></td><td>Blob guard</td><td>3 open cells, 0 shaded: if one pair would merge into a 3+ blob, the other cell is shaded</td></tr>
       <tr><td><b>H</b></td><td>Churchillian democracy</td><td>Try each candidate pairing; eliminate any that leads to contradiction</td></tr>
     </tbody>
   </table>
